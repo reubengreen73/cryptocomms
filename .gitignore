@@ -1,0 +1,10 @@
+# object files
+*.o
+
+# names of binaries
+tester
+cryptocomms
+
+# files which are automatically generated
+Makefile
+tester.cpp

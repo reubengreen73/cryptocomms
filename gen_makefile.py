@@ -53,10 +53,10 @@ all: cryptocomms tester
 ## Rules for the cryptocomms executable and the tester ##
 
 cryptocomms: main.o $ALL_UNIT_O_FILES
-	g++ $$(DBG) main.o $ALL_UNIT_O_FILES -o cryptocomms
+	g++ $$(DBG) -pthread main.o $ALL_UNIT_O_FILES -o cryptocomms
 
 tester: tester.o $ALL_UNIT_O_FILES $ALL_TEST_O_FILES
-	g++ $$(DBG) tester.o $ALL_UNIT_O_FILES $ALL_TEST_O_FILES -o tester
+	g++ $$(DBG) -pthread tester.o $ALL_UNIT_O_FILES $ALL_TEST_O_FILES -o tester
 
 main.o: main.cpp $MAIN_H_FILES
 	g++ $$(DBG) -c main.cpp

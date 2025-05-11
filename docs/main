@@ -34,8 +34,8 @@ The main component of the test framework is a python script, gen_tester.py, whic
 C++ source code for a test runner binary which will run some or all of the project's tests.
 The tests should be placed in files with the extension .tests.cpp in the directory "tests".
 
-Each .tests.cpp file should #include the header file testsys.h, which defines two macros
-TESTFUNC and TESTASSERT. Test functions then have the following form:
+Each .tests.cpp file should #include the header file testsys.h, which defines three macros
+TESTFUNC, TESTASSERT, and TESTTHROW. Test functions then have the following form:
 
   TESTFUNC(func_name){
 
@@ -44,6 +44,11 @@ TESTFUNC and TESTASSERT. Test functions then have the following form:
     int result;
     /* test code */
     TESTASSERT(result == 1);
+
+    /* the following checks that some_func(bad_arg) throw an exception
+     * whose what() string contains "func error"
+     */
+    TESTTHROW(some_func(bad_arg),"func error");
 
   }
 

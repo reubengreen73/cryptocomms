@@ -30,18 +30,13 @@ test_source_template_string = """\
 
 typedef void (*testsys_function_t)();
 
-bool run_test(testsys_function_t test_function, bool& section_printed,
-	      std::string& section_name)
+bool run_test(testsys_function_t test_function)
 {
   try{
     test_function();
   }
   catch(std::exception& ex){
-    if(not section_printed){
-      std::cout << section_name <<  " FAILURES" << std::endl;
-      section_printed = true;
-    }
-    std::cout << "  " << ex.what() << std::endl;
+    std::cout << "  [!] " << ex.what() << std::endl;
     return false;
   }
   return true;
@@ -116,14 +111,11 @@ for filename in files_to_scan:
 #     run_test() to run one of the test functions
 runtests_function_template_string = """$TESTFUNC_DECLS
 int ${SECTION}_runtests(){
-  bool section_printed = false;
-  std::string section_name = std::string(\"${SECTION}\");
   int failed_test_count = 0;
 
-$RUN_TEST_INVOCATIONS
+  std::cout << "Running tests for ${SECTION}" << std::endl;
 
-  if(section_printed)
-    std::cout << std::endl;
+$RUN_TEST_INVOCATIONS
 
   return failed_test_count;
 }"""
@@ -134,7 +126,7 @@ runtests_function_template = Template(runtests_function_template_string)
 # placeholder, FN, which is the name of the test function as passed to
 # the TESTFUNC macro.
 run_test_call_template_string = """\
-  if(not run_test(testsys_function_${FN},section_printed,section_name))
+  if(not run_test(testsys_function_${FN}))
     failed_test_count++;
 """
 run_test_call_template = Template(run_test_call_template_string)

@@ -30,7 +30,7 @@ test_source_template_string = """\
 
 typedef void (*testsys_function_t)();
 
-void run_test(testsys_function_t test_function, bool& section_printed,
+bool run_test(testsys_function_t test_function, bool& section_printed,
 	      std::string& section_name)
 {
   try{
@@ -42,20 +42,23 @@ void run_test(testsys_function_t test_function, bool& section_printed,
       section_printed = true;
     }
     std::cout << "  " << ex.what() << std::endl;
+    return false;
   }
+  return true;
 }
 
 $RUNTESTS_FUNCTIONS
 
 int main(int argc, char** argv){
-  std::map<std::string,void(*)()> runtests_funcs;
+  std::map<std::string,int(*)()> runtests_funcs;
+  int failed_tests_count = 0;
 
 $ADD_RUNTESTS_FUNCTIONS
 
   for(int i=1;i<argc;i++){
     auto section_name = std::string(argv[i]);
     try{
-      (runtests_funcs.at(section_name))();
+      failed_tests_count += (runtests_funcs.at(section_name))();
     }
     catch(std::out_of_range& oor){
       std::cout << std::string("ERROR: Unknown test section \\"") << section_name
@@ -65,8 +68,15 @@ $ADD_RUNTESTS_FUNCTIONS
 
   if(argc == 1){
     for(auto& x: runtests_funcs){
-      (x.second)();
+      failed_tests_count += (x.second)();
     }
+  }
+
+  if(failed_tests_count == 0){
+    std::cout << std::endl << "ALL TESTS PASSED" << std::endl;
+  } else {
+    std::string msg = (failed_tests_count == 1) ? " TEST FAILED" : " TESTS FAILED";
+    std::cout << std::endl << failed_tests_count << msg << std::endl;
   }
 
   return 0;
@@ -105,16 +115,29 @@ for filename in files_to_scan:
 #   RUN_TEST_INVOCATIONS is a sequence of lines, each calling the function
 #     run_test() to run one of the test functions
 runtests_function_template_string = """$TESTFUNC_DECLS
-void ${SECTION}_runtests(){
-  auto section_printed = false;
-  auto section_name = std::string(\"${SECTION}\");
+int ${SECTION}_runtests(){
+  bool section_printed = false;
+  std::string section_name = std::string(\"${SECTION}\");
+  int failed_test_count = 0;
 
 $RUN_TEST_INVOCATIONS
 
   if(section_printed)
     std::cout << std::endl;
+
+  return failed_test_count;
 }"""
 runtests_function_template = Template(runtests_function_template_string)
+
+# Template to generate calls to run_test for each test function, and to
+# increment the count of failed tests if the test fails. There is one
+# placeholder, FN, which is the name of the test function as passed to
+# the TESTFUNC macro.
+run_test_call_template_string = """\
+  if(not run_test(testsys_function_${FN},section_printed,section_name))
+    failed_test_count++;
+"""
+run_test_call_template = Template(run_test_call_template_string)
 
 # Generate the value of the RUNTESTS_FUNCTIONS placeholder of test_source_template,
 # consisting of one *_runtests() function for each .tests.cpp file and the associated
@@ -123,9 +146,8 @@ runtests_function_subchunks = []
 for section in sections:
     testfunc_decl_lines = [f"void testsys_function_{fn}();" for fn in sections[section]]
     testfunc_decls_chunk = '\n'.join(testfunc_decl_lines)
-    run_test_invocations_lines = [f"  run_test(testsys_function_{fn},section_printed,section_name);"
-                                  for fn in sections[section]]
-    run_test_invocations_chunk = '\n'.join(run_test_invocations_lines)
+    run_test_invocations_blocks = [run_test_call_template.substitute(FN=fn) for fn in sections[section]]
+    run_test_invocations_chunk = '\n'.join(run_test_invocations_blocks)
     runtests_function_chunk = runtests_function_template.substitute(TESTFUNC_DECLS=testfunc_decls_chunk,
                                                                     SECTION=section,
                                                                     RUN_TEST_INVOCATIONS=run_test_invocations_chunk)

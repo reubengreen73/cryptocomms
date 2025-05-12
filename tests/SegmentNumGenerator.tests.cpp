@@ -8,7 +8,7 @@
 #include <cstdio>
 #include <iostream>
 
-void stress_tests_uniqueness_thread_func(std::vector<uint_least64_t>& segnums, SegmentNumGenerator& sng)
+void stress_test_segnumgen_uniqueness_thread_func(std::vector<uint_least64_t>& segnums, SegmentNumGenerator& sng)
 {
   for(int i = 0; i < 200; i++){
     segnums.push_back(sng.next_num());
@@ -21,7 +21,7 @@ void stress_tests_uniqueness_thread_func(std::vector<uint_least64_t>& segnums, S
  * SegmentNumGenerator to generate lots of segment numbers in parallel. All the
  * segment numbers generated are then checked for repetitions.
  */
-TESTFUNC(stress_tests_uniqueness)
+TESTFUNC(stress_test_segnumgen_uniqueness)
 {
   int num_threads = 20;
   std::vector<std::vector<uint_least64_t>> segnum_vectors(num_threads);
@@ -38,7 +38,7 @@ TESTFUNC(stress_tests_uniqueness)
     std::vector<std::thread> threads;
 
     for(int i = 0; i < num_threads; i++){
-      threads.push_back(std::thread(stress_tests_uniqueness_thread_func,
+      threads.push_back(std::thread(stress_test_segnumgen_uniqueness_thread_func,
 				    std::ref(segnum_vectors[i]),std::ref(sng)));
     }
 

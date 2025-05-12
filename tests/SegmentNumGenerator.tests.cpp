@@ -66,3 +66,56 @@ TESTFUNC(stress_test_segnumgen_uniqueness)
     std::cout << "Test warning: could not delete \"testfile\"" << std::endl;
   }
 }
+
+
+/* Check that a missing stored segnum file causes the correct error to be thrown
+ */
+TESTFUNC(segnumgen_file_missing){
+  std::ofstream segnum_file("testfile",std::ios::trunc);
+  if(!segnum_file.is_open()){
+       throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
+  }
+
+  segnum_file.close();
+  if(std::remove("testfile") != 0){
+    std::cout << "Test warning: could not delete \"testfile\"" << std::endl;
+  }
+
+  TESTTHROW(SegmentNumGenerator sng("testfile",100),"SegmentNumGenerator: could not open stored segment number file");
+}
+
+
+/* Check that a stored segnum file with non-numerical content causes the correct error to be thrown
+ */
+TESTFUNC(segnumgen_file_is_nonsense){
+  std::ofstream segnum_file("testfile",std::ios::trunc);
+  if(!segnum_file.is_open()){
+       throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
+  }
+  segnum_file << "blah blah";
+  segnum_file.close();
+
+  TESTTHROW(SegmentNumGenerator sng("testfile",100),"SegmentNumGenerator: could not parse stored segment number in file");
+
+  if(std::remove("testfile") != 0){
+    std::cout << "Test warning: could not delete \"testfile\"" << std::endl;
+  }
+}
+
+
+/* Check that a stored segnum file with a value that is too big causes the correct error to be thrown
+ */
+TESTFUNC(segnumgen_file_value_too_high){
+  std::ofstream segnum_file("testfile",std::ios::trunc);
+  if(!segnum_file.is_open()){
+       throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
+  }
+  segnum_file << "281474976710655";
+  segnum_file.close();
+
+  TESTTHROW(SegmentNumGenerator sng("testfile",100),"SegmentNumGenerator: stored segment number in file");
+
+  if(std::remove("testfile") != 0){
+    std::cout << "Test warning: could not delete \"testfile\"" << std::endl;
+  }
+}

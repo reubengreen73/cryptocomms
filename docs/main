@@ -61,5 +61,6 @@ a list of base names of .test.cpp files will invoke only the tests in those file
 "./tester Foo Bar" will run only the tests from tests/Foo.tests.cpp and tests/Bar.tests.cpp.
 
 All identifiers (including macro names) beginning with "testsys_" or "TESTSYS_" are reserved for
-the internal use of the test system and should not be used in any file which #includes testsys.h.
-In practice, this means that *.tests.cpp in the tests directory should not use these identifiers.
+the internal use of the test system. More specifically, any file which #includes tests/testsys.h
+should not use these identifiers at global scope, or in any test function defined with TESTFUNC.
+In practice, the files which #include test are the *tests.cpp files in the "tests" directory.

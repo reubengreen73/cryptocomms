@@ -30,7 +30,7 @@ test_source_template_string = """\
 
 typedef void (*testsys_function_t)();
 
-bool run_test(testsys_function_t test_function)
+bool testsys_run_test(testsys_function_t test_function)
 {
   try{
     test_function();
@@ -102,15 +102,15 @@ for filename in files_to_scan:
     sections[section_name] = testfuncs
 
 
-# All of the test functions for each XXX.tests.cpp file are invoked in a
-# function called XXX_runtests(), which is made using the following template.
+# All of the test functions for each XXX.tests.cpp file are invoked in a function
+# called testsys_XXX_runtests(), which is made using the following template.
 # There are 3 placeholders
 #   TESTFUNC_DECLS is a sequence of lines declaring the test functions
 #   SECTION is the part of the source file name before the .tests.cpp
 #   RUN_TEST_INVOCATIONS is a sequence of lines, each calling the function
-#     run_test() to run one of the test functions
+#     testsys_run_test() to run one of the test functions
 runtests_function_template_string = """$TESTFUNC_DECLS
-int ${SECTION}_runtests(){
+int testsys_${SECTION}_runtests(){
   int failed_test_count = 0;
 
   std::cout << "Running tests for ${SECTION}" << std::endl;
@@ -121,19 +121,19 @@ $RUN_TEST_INVOCATIONS
 }"""
 runtests_function_template = Template(runtests_function_template_string)
 
-# Template to generate calls to run_test for each test function, and to
-# increment the count of failed tests if the test fails. There is one
-# placeholder, FN, which is the name of the test function as passed to
+# Template to generate calls to testsys_run_test() for each test function,
+# and to increment the count of failed tests if the test fails. There is
+# one placeholder, FN, which is the name of the test function as passed to
 # the TESTFUNC macro.
 run_test_call_template_string = """\
-  if(not run_test(testsys_function_${FN}))
+  if(not testsys_run_test(testsys_function_${FN}))
     failed_test_count++;
 """
 run_test_call_template = Template(run_test_call_template_string)
 
-# Generate the value of the RUNTESTS_FUNCTIONS placeholder of test_source_template,
-# consisting of one *_runtests() function for each .tests.cpp file and the associated
-# declarations of the test functions
+# Generate the value of the RUNTESTS_FUNCTIONS placeholder of test_source_template, consisting
+# of one testsys_*_runtests() function for each .tests.cpp file and the associated declarations
+# of the test functions
 runtests_function_subchunks = []
 for section in sections:
     testfunc_decl_lines = [f"void testsys_function_{fn}();" for fn in sections[section]]
@@ -146,12 +146,11 @@ for section in sections:
     runtests_function_subchunks.append(runtests_function_chunk)
 runtests_functions_chunk = '\n\n'.join(runtests_function_subchunks)
 
-# Generate the value of the ADD_RUNTESTS_FUNCTIONS for the test_source_template, which
-# consists of lines to go in main() to add all of the *_runtests() functions to the std::map
-# runtests_funcs
-add_runtests_functions_lines = ["  runtests_funcs.insert({"+f"std::string(\"{x}\"),{x}_runtests"+"});"
+# Generate the value of the ADD_RUNTESTS_FUNCTIONS for the test_source_template, which consists of
+# lines to go in main() to add all of the testsys_*_runtests() functions to the std::map runtests_funcs
+add_runtests_functions_lines = ["  runtests_funcs.insert({"+f"std::string(\"{x}\"),testsys_{x}_runtests"+"});"
                                 for x in sections]
-add_runtests_functions_chunk = '\n\n'.join(add_runtests_functions_lines)
+add_runtests_functions_chunk = '\n'.join(add_runtests_functions_lines)
 
 
 # Generate the source code and write it to file

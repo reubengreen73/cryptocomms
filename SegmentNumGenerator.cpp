@@ -123,7 +123,7 @@ uint_least64_t SegmentNumGenerator::get_saved_segnum()
    * value set at installation should be vastly smaller than this.
    */
   if( not(saved_segnum < segnum_max) ){
-    throw std::runtime_error(std::string("SegmentNumGenerator: stored segment number in file ")+_path+
+    throw std::runtime_error(std::string("SegmentNumGenerator: stored segment number in file: ")+_path+
 			     std::string(" is too big"));
   }
 

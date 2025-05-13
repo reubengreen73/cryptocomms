@@ -1,9 +1,6 @@
 #include "Session.h"
 
-Session::Session(std::string msg): _msg(msg)
-{}
-
-std::string Session::msg()
+Session::Session(std::string segnum_file_path, int segnums_reserved):
+  segnumgen(segnum_file_path,segnums_reserved)
 {
-  return _msg;
 }

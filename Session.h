@@ -3,12 +3,13 @@
 
 #include <string>
 
+#include "SegmentNumGenerator.h"
+
 class Session{
 public:
-  Session(std::string msg);
-  std::string msg();
+  Session(std::string segnum_file_path, int segnums_reserved);
+  SegmentNumGenerator segnumgen;
 private:
-  std::string _msg;
 };
 
 #endif

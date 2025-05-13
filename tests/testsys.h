@@ -22,7 +22,7 @@
  * not met.
  */
 #define TESTASSERT(COND) if(not (COND)){\
-    throw std::runtime_error(#COND " | " __FILE__ " at line " TESTSYS_STRINGIFY(__LINE__)); \
+    throw std::runtime_error(#COND " is false | " __FILE__ " at line " TESTSYS_STRINGIFY(__LINE__)); \
   }
 
 /* The TESTTHROW macro tests whether the code STMT throws an exception whose what()

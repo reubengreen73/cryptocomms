@@ -16,9 +16,10 @@ constexpr uint_least64_t segnum_max = 281474976710655U;
  * "reserved" is how many segment numbers to reserve for use each time
  * a fresh reservation of numbers happens
  */
-SegmentNumGenerator::SegmentNumGenerator(std::string path, int reserved):
-  _path(path), _reserved(reserved)
+SegmentNumGenerator::SegmentNumGenerator(std::string path, uint reserved):
+  _path(path)
 {
+  set_reserved(reserved);
   reserve_nums();
 }
 
@@ -40,6 +41,22 @@ const std::lock_guard<std::mutex> _lock_guard(_lock);
 
  return _next_num++;
 }
+
+
+/* SegmentNumGenerator::set_reserved() sets how many segment numbers to reserve at
+ * each call of reserve_nums().
+ */
+void SegmentNumGenerator::set_reserved(uint reserved)
+{
+const std::lock_guard<std::mutex> _lock_guard(_lock);
+
+  if(reserved == 0){
+    throw std::runtime_error("SegmentNumGenerator: set_reserved called with 0");
+  }
+
+  _reserved = reserved;
+}
+
 
 
 /* SegmentNumGenerator::reserve_nums() uses the system clock and the stored record

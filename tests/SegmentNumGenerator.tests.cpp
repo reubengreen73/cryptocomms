@@ -119,3 +119,24 @@ TESTFUNC(segnumgen_file_value_too_high){
     std::cout << "Test warning: could not delete \"testfile\"" << std::endl;
   }
 }
+
+
+/* Check that calling set_reserved() with argument 0 throws the expected error
+ */
+TESTFUNC(set_reserved_with_zero){
+  std::ofstream segnum_file("testfile",std::ios::trunc);
+  if(!segnum_file.is_open()){
+       throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
+  }
+  segnum_file << std::to_string(0);;
+  segnum_file.close();
+
+  TESTTHROW(SegmentNumGenerator sng("testfile",0),"SegmentNumGenerator: set_reserved called with 0");
+
+  SegmentNumGenerator sng("testfile",1);
+  TESTTHROW(sng.set_reserved(0),"SegmentNumGenerator: set_reserved called with 0");
+
+  if(std::remove("testfile") != 0){
+    std::cout << "Test warning: could not delete \"testfile\"" << std::endl;
+  }
+}

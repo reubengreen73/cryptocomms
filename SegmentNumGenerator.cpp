@@ -20,7 +20,14 @@ SegmentNumGenerator::SegmentNumGenerator(std::string path, uint reserved):
   _path(path)
 {
   set_reserved(reserved);
-  reserve_nums();
+
+  /* Setting both _next_num and _new_reserve_needed to the same value will cause
+   * reserve_nums() to be called on the first invocation of next_num(). This allows
+   * set_reserve() to be called to set a better value for _reserved before a
+   * reservation of numbers happens
+   */
+  _next_num = 0;
+  _new_reserve_needed = 0;
 }
 
 

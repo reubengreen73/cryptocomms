@@ -81,7 +81,8 @@ TESTFUNC(segnumgen_file_missing){
     std::cout << "Test warning: could not delete \"testfile\"" << std::endl;
   }
 
-  TESTTHROW(SegmentNumGenerator sng("testfile",100),"SegmentNumGenerator: could not open stored segment number file");
+  SegmentNumGenerator sng("testfile");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: could not open stored segment number file");
 }
 
 
@@ -95,7 +96,8 @@ TESTFUNC(segnumgen_file_is_nonsense){
   segnum_file << "blah blah";
   segnum_file.close();
 
-  TESTTHROW(SegmentNumGenerator sng("testfile",100),"SegmentNumGenerator: could not parse stored segment number in file");
+  SegmentNumGenerator sng("testfile");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: could not parse stored segment number in file");
 
   if(std::remove("testfile") != 0){
     std::cout << "Test warning: could not delete \"testfile\"" << std::endl;
@@ -113,7 +115,8 @@ TESTFUNC(segnumgen_file_value_too_high){
   segnum_file << "281474976710655";
   segnum_file.close();
 
-  TESTTHROW(SegmentNumGenerator sng("testfile",100),"SegmentNumGenerator: stored segment number in file");
+  SegmentNumGenerator sng("testfile");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: stored segment number in file");
 
   if(std::remove("testfile") != 0){
     std::cout << "Test warning: could not delete \"testfile\"" << std::endl;
@@ -133,7 +136,7 @@ TESTFUNC(set_reserved_with_zero){
 
   TESTTHROW(SegmentNumGenerator sng("testfile",0),"SegmentNumGenerator: set_reserved called with 0");
 
-  SegmentNumGenerator sng("testfile",1);
+  SegmentNumGenerator sng("testfile");
   TESTTHROW(sng.set_reserved(0),"SegmentNumGenerator: set_reserved called with 0");
 
   if(std::remove("testfile") != 0){

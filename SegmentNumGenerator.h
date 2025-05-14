@@ -17,7 +17,7 @@
 class SegmentNumGenerator
 {
 public:
-  SegmentNumGenerator(std::string path, uint reserved);
+  SegmentNumGenerator(std::string path, uint reserved = 1000);
   uint_least64_t next_num();
   void set_reserved(uint reserved);
 

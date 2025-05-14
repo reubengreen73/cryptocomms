@@ -14,7 +14,7 @@ int main(){
   segnum_file << std::to_string(0);
   segnum_file.close();
 
-  Session session("segnumfile",100);
+  Session session("segnumfile");
   std::cout << session.segnumgen.next_num() << std::endl;
 
   return 0;

@@ -7,7 +7,7 @@
 
 class Session{
 public:
-  Session(std::string segnum_file_path, int segnums_reserved);
+  Session(std::string segnum_file_path);
   SegmentNumGenerator segnumgen;
 private:
 };

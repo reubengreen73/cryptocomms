@@ -1,8 +1,7 @@
 [This file holds notes on the current status of cryptocomms while it is under construction]
 
-
-I have now created the build system and test framework. I have some bits of code for cryptocomms
-which I have already created, and my next task is to incorporate them here.
+I have now incorporated the SegmentNumGenerator code which I had previously written, and I have
+made a stub of Session.
 
 The high-level structure of cryptocomms will be as follows. The top-level class is Session, which
 represents a session of cryptocomms. The Session will manage the other components, including a set

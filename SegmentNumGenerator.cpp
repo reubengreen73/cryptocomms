@@ -120,7 +120,7 @@ void SegmentNumGenerator::reserve_nums()
 uint_least64_t SegmentNumGenerator::get_saved_segnum()
 {
   std::ifstream segnum_file(_path);
-  if(!segnum_file.is_open()){
+  if(!segnum_file){
     throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
 			     +_path);
   }
@@ -194,7 +194,7 @@ void SegmentNumGenerator::save_segnum(uint_least64_t segnum)
     */
    while(true){
      std::ofstream segnum_file(_path,std::ios::trunc);
-     if(!segnum_file.is_open()){
+     if(!segnum_file){
        throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
 				+_path);
      }

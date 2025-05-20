@@ -27,7 +27,7 @@ TESTFUNC(stress_test_segnumgen_uniqueness)
   std::vector<std::vector<uint_least64_t>> segnum_vectors(num_threads);
 
   std::ofstream segnum_file("testfile",std::ios::trunc);
-  if(!segnum_file.is_open()){
+  if(!segnum_file){
        throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
   }
   segnum_file << std::to_string(0);
@@ -72,7 +72,7 @@ TESTFUNC(stress_test_segnumgen_uniqueness)
  */
 TESTFUNC(segnumgen_file_missing){
   std::ofstream segnum_file("testfile",std::ios::trunc);
-  if(!segnum_file.is_open()){
+  if(!segnum_file){
        throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
   }
 
@@ -90,7 +90,7 @@ TESTFUNC(segnumgen_file_missing){
  */
 TESTFUNC(segnumgen_file_is_nonsense){
   std::ofstream segnum_file("testfile",std::ios::trunc);
-  if(!segnum_file.is_open()){
+  if(!segnum_file){
        throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
   }
   segnum_file << "blah blah";
@@ -109,7 +109,7 @@ TESTFUNC(segnumgen_file_is_nonsense){
  */
 TESTFUNC(segnumgen_file_value_too_high){
   std::ofstream segnum_file("testfile",std::ios::trunc);
-  if(!segnum_file.is_open()){
+  if(!segnum_file){
        throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
   }
   segnum_file << "281474976710655";
@@ -128,7 +128,7 @@ TESTFUNC(segnumgen_file_value_too_high){
  */
 TESTFUNC(set_reserved_with_zero){
   std::ofstream segnum_file("testfile",std::ios::trunc);
-  if(!segnum_file.is_open()){
+  if(!segnum_file){
        throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
   }
   segnum_file << std::to_string(0);;

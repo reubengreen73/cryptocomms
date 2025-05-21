@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include "SegmentNumGenerator.h"
+#include "PeerConfig.h"
 #include "Session.h"
 
 int main(){

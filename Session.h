@@ -4,6 +4,7 @@
 #include <string>
 
 #include "SegmentNumGenerator.h"
+#include "PeerConfig.h"
 
 class Session{
 public:

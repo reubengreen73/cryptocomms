@@ -1,11 +1,18 @@
 #include "PeerConfig.h"
 
-/* This destructor just blanks out the secret key, which helps prevent key leakage
- * through memory reuse.
- */
-PeerConfig::~PeerConfig()
+/* PeerConfig::clear() clears the state of the PeerConfig */
+void PeerConfig::clear()
 {
-  for(int i=0;i<32;i++){
-    key[i] = 0;
+  name = "";
+  channels = {};
+  ip_addr = "";
+  port = -1;
+  max_packet_size = -1;
+
+  for(int i=0;i<4;i++){
+    id[i] = 0;
   }
+
+  key.erase();
+
 }

@@ -171,6 +171,10 @@ namespace
 
     auto second_chunk_start = std::find_if(first_chunk_end,value_string.end(),not_isspace);
     if(second_chunk_start == value_string.end()){
+      /* This error should never occur, since value_string should have no trailing whitespace,
+       * so a missing path should trigger the previous "no whitespace" error. However, sanity
+       * checks are good.
+       */
       throw ConfigLineError("no path in channel specifier");
     }
 

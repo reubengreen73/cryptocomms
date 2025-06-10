@@ -9,6 +9,7 @@
 
 namespace
 {
+  const std::string self_name = "self";
 
   /* not_isspace() and is_isspace() are simple predicates to be passed to algorithms */
 
@@ -457,17 +458,17 @@ namespace
 	else if(option_name == "id")
 	  peer_config.id = parse_id(option_value);
 
-	else if( (option_name == "key") and (peer_config.name != "self") )
+	else if( (option_name == "key") and (peer_config.name != self_name) )
 	  peer_config.key = SecretKey(option_value);
 
-	else if( (option_name == "key") and (peer_config.name == "self") )
-	  throw ConfigLineError("\"key\" not allowed for \"self\"");
+	else if( (option_name == "key") and (peer_config.name == self_name) )
+	  throw ConfigLineError("\"key\" not allowed for \""+self_name+"\"");
 
-	else if( (option_name == "channel") and (peer_config.name != "self") )
+	else if( (option_name == "channel") and (peer_config.name != self_name) )
 	  peer_config.channels.push_back(parse_channel(option_value));
 
-	else if( (option_name == "channel") and (peer_config.name == "self") )
-	  throw ConfigLineError("\"channel\" not allowed for \"self\"");
+	else if( (option_name == "channel") and (peer_config.name == self_name) )
+	  throw ConfigLineError("\"channel\" not allowed for \""+self_name+"\"");
 
 	else if(option_name == "ip")
 	  peer_config.ip_addr = parse_ip(option_value);
@@ -494,7 +495,7 @@ namespace
     }
 
     /* check that all required options have been given */
-    std::set<std::string> required_options = (peer_config.name == "self") ?
+    std::set<std::string> required_options = (peer_config.name == self_name) ?
       std::set<std::string>{"id","ip","port"} : std::set<std::string>{"id","ip","port","key"};
     std::set<std::string> missing_options = check_required_options(required_options,
 								   option_names_seen);
@@ -528,7 +529,7 @@ ConfigFileParser::ConfigFileParser(const std::string& path)
     }
     config_names_seen.insert(peer_config.name);
 
-    if(peer_config.name == "self"){
+    if(peer_config.name == self_name){
       id = peer_config.id;
       ip_addr = peer_config.ip_addr;
       port = peer_config.port;
@@ -540,7 +541,7 @@ ConfigFileParser::ConfigFileParser(const std::string& path)
 
   }
 
-  if(config_names_seen.count("self") == 0){
-    throw std::runtime_error("ConfigFileParser: missing configuration for self");
+  if(config_names_seen.count(self_name) == 0){
+    throw std::runtime_error("ConfigFileParser: missing configuration for "+self_name);
   }
 }

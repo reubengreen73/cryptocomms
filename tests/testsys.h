@@ -28,15 +28,20 @@
 /* The TESTTHROW macro tests whether the code STMT throws an exception whose what()
  * string contains WHAT_SUBSTR, and reports a failure if it does not.
  */
-#define TESTTHROW(STMT,WHAT_SUBSTR) {bool testsys_testthrow_exception_thrown = false; \
+#define TESTTHROW(STMT,WHAT_SUBSTR) {\
+  bool testsys_testthrow_exception_thrown = false; \
   try{ STMT ;} \
   catch(std::exception & ex){ \
     if(std::string(ex.what()).find(WHAT_SUBSTR) != std::string::npos){	\
       testsys_testthrow_exception_thrown = true; \
     } \
+    else{ \
+      throw std::runtime_error(#STMT " threw unexpected error -- " + std::string(ex.what()) + " | " \
+			     __FILE__ " at line " TESTSYS_STRINGIFY(__LINE__)); \
+    } \
   } \
   if(not testsys_testthrow_exception_thrown){ \
-    throw std::runtime_error(#STMT " did not throw " #WHAT_SUBSTR " | " \
+    throw std::runtime_error(#STMT " did not throw expected error -- " #WHAT_SUBSTR " | " \
 			     __FILE__ " at line " TESTSYS_STRINGIFY(__LINE__)); \
   } \
 }

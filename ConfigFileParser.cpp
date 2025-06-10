@@ -227,10 +227,17 @@ namespace
 	throw ConfigLineError("invalid ip address");
       }
 
-      it = next_period;
-      if(it != value_string.end()){
-	it++;
+      if(next_period == value_string.end()){
+	it = value_string.end();
       }
+      else{
+	it = next_period + 1;
+	if(it == value_string.end()){
+	  // the last character of value_string is a '.', error
+	  throw ConfigLineError("malformed ip address");
+	}
+      }
+
     }
 
     return value_string;

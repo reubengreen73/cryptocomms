@@ -1,0 +1,13 @@
+# Example where the other host has no channels
+
+name: self
+id: 70F03a83
+ip: 192.168.3.55
+port: 1003
+
+name: other_host
+id: 01a7B0f9
+ip: 192.168.17.19
+key: 0123456789abcdefABCDEF023FaF0f9D098a701246a763a54b537DD75C656018
+port: 2301
+max_size: 1000

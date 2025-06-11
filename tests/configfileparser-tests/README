@@ -1,0 +1,2 @@
+This directory contains correct and incorrect config files for use by
+the tests in ../ConfigFileParser.tests.cpp

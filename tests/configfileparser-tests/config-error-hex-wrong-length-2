@@ -1,0 +1,13 @@
+name: self
+id: 70F03a83
+ip: 192.168.3.55
+port: 1003
+
+name: other_host
+# ERROR NEXT LINE: hex string too long
+id: 01a7B0f90
+ip: 192.168.17.19
+key: 0123456789abcdefABCDEF023FaF0f9D098a701246a763a54b537DD75C656018
+port: 2301
+channel: 23ab /tmp/cryptocomms/sockets/other_host
+max_size: 1000

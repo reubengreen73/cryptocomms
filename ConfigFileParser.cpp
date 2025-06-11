@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <algorithm>
+#include <iterator>
 #include <cctype>
 #include <set>
 
@@ -518,6 +519,35 @@ namespace
       throw std::runtime_error("ConfigFileParser: missing options for \""+peer_config.name+"\"\n  "+
 			       missing_options_string);
     }
+
+    /* check that no channel id has been repeated */
+    std::multiset<std::array<unsigned char,2>> channel_ids;
+    std::transform(peer_config.channels.begin(), peer_config.channels.end(),
+		   std::inserter(channel_ids,channel_ids.end()),
+		   [](channel_spec& cs){return cs.first;}
+		   );
+    for(auto& x : channel_ids){
+      if(channel_ids.count(x) > 1){
+	throw std::runtime_error("ConfigFileParser: duplicated channel id for \""
+				 +peer_config.name+"\"\n  "
+				 );
+      }
+    }
+
+    /* check that no channel path has been repeated */
+    std::multiset<std::string> channel_paths;
+    std::transform(peer_config.channels.begin(), peer_config.channels.end(),
+		   std::inserter(channel_paths,channel_paths.end()),
+		   [](channel_spec& cs){return cs.second;}
+		   );
+    for(auto& x : channel_paths){
+      if(channel_paths.count(x) > 1){
+	throw std::runtime_error("ConfigFileParser: duplicated channel path for \""
+				 +peer_config.name+"\"\n  "
+				 );
+      }
+    }
+
 
     return true;
   }

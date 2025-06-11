@@ -205,6 +205,17 @@ TESTFUNC(repeated_error)
 }
 
 
+/* check that a repeated channel id or path triggers the correct error */
+TESTFUNC(repeated_channel_path_id_error)
+{
+  TESTTHROW(ConfigFileParser(config_path+"config-error-repeated-channel-id"),
+	    " duplicated channel id");
+
+  TESTTHROW(ConfigFileParser(config_path+"config-error-repeated-channel-path"),
+	    " duplicated channel path");
+}
+
+
 /* check that an example configuration file produces the expected parsed values */
 TESTFUNC(example_simple)
 {

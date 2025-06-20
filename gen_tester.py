@@ -35,18 +35,6 @@ test_source_template_string = """\
 
 typedef void (*testsys_function_t)();
 
-bool testsys_run_test(testsys_function_t test_function)
-{
-  try{
-    test_function();
-  }
-  catch(std::exception& ex){
-    std::cout << "  [!] " << ex.what() << std::endl;
-    return false;
-  }
-  return true;
-}
-
 int testsys_deleter(const char* path, const struct stat* stat_info,
 	    int other_info, struct FTW* ftw_info)
 {
@@ -73,14 +61,8 @@ void testsys_remove_dir(const std::string& path)
   }
 }
 
-$RUNTESTS_FUNCTIONS
-
-int main(int argc, char** argv){
-  std::map<std::string,int(*)()> runtests_funcs;
-  int failed_tests_count = 0;
-
-$ADD_RUNTESTS_FUNCTIONS
-
+bool testsys_run_test(testsys_function_t test_function)
+{
   std::string dirpath = "testsys_root";
   testsys_remove_dir(dirpath);
   if(mkdir(dirpath.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) == -1){
@@ -89,6 +71,31 @@ $ADD_RUNTESTS_FUNCTIONS
   if(chdir(dirpath.c_str()) == -1){
     throw std::runtime_error("error when trying to enter testing directory");
   }
+
+  bool ret_val = true;
+  try{
+    test_function();
+  }
+  catch(std::exception& ex){
+    std::cout << "  [!] " << ex.what() << std::endl;
+    ret_val = false;
+  }
+
+  if(chdir("..") == -1){
+    throw std::runtime_error("error when trying to leave testing directory");
+  }
+  testsys_remove_dir(dirpath);
+
+  return ret_val;
+}
+
+$RUNTESTS_FUNCTIONS
+
+int main(int argc, char** argv){
+  std::map<std::string,int(*)()> runtests_funcs;
+  int failed_tests_count = 0;
+
+$ADD_RUNTESTS_FUNCTIONS
 
   for(int i=1;i<argc;i++){
     auto section_name = std::string(argv[i]);
@@ -113,11 +120,6 @@ $ADD_RUNTESTS_FUNCTIONS
     std::string msg = (failed_tests_count == 1) ? " TEST FAILED" : " TESTS FAILED";
     std::cout << std::endl << failed_tests_count << msg << std::endl;
   }
-
-  if(chdir("..") == -1){
-    throw std::runtime_error("error when trying to leave testing directory");
-  }
-  testsys_remove_dir(dirpath);
 
   return 0;
 }

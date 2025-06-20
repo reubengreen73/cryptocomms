@@ -28,6 +28,11 @@ test_source_template_string = """\
 #include <iostream>
 #include <map>
 
+#include <sys/stat.h>
+#include <ftw.h>
+#include <unistd.h>
+#include <errno.h>
+
 typedef void (*testsys_function_t)();
 
 bool testsys_run_test(testsys_function_t test_function)
@@ -42,6 +47,32 @@ bool testsys_run_test(testsys_function_t test_function)
   return true;
 }
 
+int testsys_deleter(const char* path, const struct stat* stat_info,
+	    int other_info, struct FTW* ftw_info)
+{
+  int ret;
+  if(other_info == FTW_DP)
+    ret = rmdir(path);
+  else if(other_info == FTW_F)
+    ret = unlink(path);
+  else
+    throw std::runtime_error(std::string("error when deleting ")+path);
+
+  if(ret == -1)
+    throw std::runtime_error(std::string("error when deleting ")+path);
+
+  return 0;
+}
+
+void testsys_remove_dir(const std::string& path)
+{
+  int ret = nftw(path.c_str(),testsys_deleter,64,FTW_DEPTH);
+
+  if( (ret == -1) and (errno != ENOENT) ){
+    throw std::runtime_error("error when trying to delete old testing directory");
+  }
+}
+
 $RUNTESTS_FUNCTIONS
 
 int main(int argc, char** argv){
@@ -49,6 +80,15 @@ int main(int argc, char** argv){
   int failed_tests_count = 0;
 
 $ADD_RUNTESTS_FUNCTIONS
+
+  std::string dirpath = "testsys_root";
+  testsys_remove_dir(dirpath);
+  if(mkdir(dirpath.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) == -1){
+    throw std::runtime_error("error when trying to create testing directory");
+  }
+  if(chdir(dirpath.c_str()) == -1){
+    throw std::runtime_error("error when trying to enter testing directory");
+  }
 
   for(int i=1;i<argc;i++){
     auto section_name = std::string(argv[i]);
@@ -73,6 +113,11 @@ $ADD_RUNTESTS_FUNCTIONS
     std::string msg = (failed_tests_count == 1) ? " TEST FAILED" : " TESTS FAILED";
     std::cout << std::endl << failed_tests_count << msg << std::endl;
   }
+
+  if(chdir("..") == -1){
+    throw std::runtime_error("error when trying to leave testing directory");
+  }
+  testsys_remove_dir(dirpath);
 
   return 0;
 }

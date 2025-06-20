@@ -9,7 +9,7 @@
 #include <vector>
 #include <set>
 
-const std::string config_path = "tests/configfileparser-tests/";
+const std::string config_path = "../tests/configfileparser-tests/";
 
 /* check that hex strings of the wrong length trigger the correct error */
 TESTFUNC(hex_wrong_length)

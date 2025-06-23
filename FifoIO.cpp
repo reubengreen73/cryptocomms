@@ -1,0 +1,246 @@
+#include "FifoIO.h"
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <signal.h>
+
+namespace
+{
+
+  /* open_fifo_read() opens a fifo for non-blocking reading at the specified path,
+   * creating the fifo first if necessary. Careful checking is performed to ensure
+   * that the file descriptor returned really does represent a fifo. This function
+   * is used by the primary constructor of both FifoFromUser and FifoToUser.
+   *
+   * The return value of open_fifo_read() is always a valid file descriptor on a fifo
+   * at path, opened with mode O_RDONLY|O_NONBLOCK .
+   */
+  int open_fifo_read(const std::string& path)
+  {
+    /* Check if there is already a file at path. If so, check that it is a fifo.
+     * If not, create a fifo there with suitable permissions.
+     */
+    struct stat stat_info;
+    int res = stat(path.c_str(),&stat_info);
+    if( (res == -1) && (errno == ENOENT) ){
+      /* no file at path, so create a fifo */
+      if(mkfifo(path.c_str(), S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH) == -1){
+	throw std::runtime_error("could not create FIFO at "+path);
+      }
+    }
+    else if(res == -1){
+      throw std::runtime_error("could not stat file at "+path);
+    }
+    else{
+      /* there is a file at path, so check that it is a fifo */
+      if( (stat_info.st_mode & S_IFIFO) == 0 ){
+	throw std::runtime_error(path+" is not a FIFO");
+      }
+    }
+
+    /* open the file at path for non-blocking reading */
+    int fd = -1;
+    while(fd == -1){
+      fd = open(path.c_str(), O_RDONLY|O_NONBLOCK);
+      if( (fd == -1) && (errno != EINTR) ){
+	throw std::runtime_error("could not open "+path);
+      }
+    }
+
+    /*  check that the file descriptor represents a fifo */
+    if(fstat(fd,&stat_info) == -1){
+      close(fd);
+      throw std::runtime_error("could not stat file at "+path);
+    }
+    if( (stat_info.st_mode & S_IFIFO) == 0 ){
+      close(fd);
+      throw std::runtime_error(path+" is not a FIFO");
+    }
+
+    return fd;
+  }
+
+}
+
+
+FifoFromUser::FifoFromUser(const std::string& path):
+  _fd(open_fifo_read(path)), _path(path){}
+
+
+FifoFromUser::FifoFromUser(FifoFromUser&& other)
+{ *this = std::move(other); }
+
+
+FifoFromUser& FifoFromUser::operator=(FifoFromUser&& other)
+{
+  if(this != &other){
+    _fd = other._fd;
+    other._fd = -1;
+  }
+  return *this;
+}
+
+
+FifoFromUser::~FifoFromUser()
+{
+  if(_fd != -1){
+    close(_fd);
+  }
+}
+
+/* FifoFromUser::read() attempts to read up to count bytes from the
+ * underlying fifo without blocking. Repeated attempts are made to read
+ * from the fifo to get to the requested count, until either there is
+ * no more data waiting in the fifo, or the write end of the fifo is closed.
+ */
+std::vector<unsigned char> FifoFromUser::read(unsigned int count)
+{
+  if(_fd == -1){
+    throw std::runtime_error("FifoIO: FifoFromUser read after move");
+  }
+
+  if(_read_buff.size() < count){
+    _read_buff.resize(count);
+  }
+
+  /* keep making reads from the fifo into _read_buff until one of the following
+   * occurs: we get enough bytes; the read would block if it were a blocking fifo
+   * (meaning that the write end of the fifo is open but there is no data to read);
+   * the fifo is at end-of-file (meaning that the write end of the fifo is closed)
+   */
+  ssize_t total_read = 0;
+  ssize_t ret;
+  while(total_read < count){
+    ret = ::read(_fd,_read_buff.data()+total_read,count-total_read);
+    if(ret == -1){
+      if(errno == EINTR){
+	continue;
+      }
+      if(errno == EAGAIN){ // the read would block if _fd were not O_NONBLOCK
+	break;
+      }
+      throw FifoIOError("error reading from fifo "+_path);
+    }
+    if(ret == 0){ // end-of-file on fifo
+      break;
+    }
+    total_read += ret;
+  }
+
+  return std::vector<unsigned char>(_read_buff.begin(),_read_buff.begin()+total_read);
+}
+
+
+int FifoFromUser::file_descriptor()
+{
+  return _fd;
+}
+
+
+/* FifoToUser::FifoToUser() opens a non-blocking fifo for writing. We have to work around the
+ * restriction that POSIX does not allow us to open a fifo for writing unless it is already open
+ * for reading. We do this by first opening the fifo for reading, then opening it for writing, and
+ * then closing the reading file descriptor.
+ *
+ * The constructor also ensures that the the action for a SIGPIPE signal is to ignore. This is
+ * necessary, as we want to be able to attempt to write to a fifo even if it might not be open
+ * for reading.
+ */
+FifoToUser::FifoToUser(const std::string& path):
+  _path(path), _fd(-1)
+{
+  /* _sigpipe_off is a static member of FifoToUser which is initialized to false */
+  if(not _sigpipe_off){
+    signal(SIGPIPE, SIG_IGN);
+    _sigpipe_off = true;
+  }
+
+  int fd = open_fifo_read(path);
+
+  while(_fd == -1){
+    _fd = open(path.c_str(), O_WRONLY|O_NONBLOCK);
+    if( (_fd == -1) && (errno != EINTR) ){
+      throw std::runtime_error("could not open "+path);
+    }
+  }
+
+  close(fd);
+}
+
+
+FifoToUser::FifoToUser(FifoToUser&& other)
+{ *this = std::move(other); }
+
+
+FifoToUser& FifoToUser::operator=(FifoToUser&& other)
+{
+  if(this != &other){
+    _fd = other._fd;
+    other._fd = -1;
+  }
+  return *this;
+}
+
+
+FifoToUser::~FifoToUser()
+{
+  if(_fd != -1){
+    close(_fd);
+  }
+}
+
+
+/* FifoToUser::write() attempts to write its argument data to the underlying fifo.
+ * FifoToUser::write() repeatedly tries to perform the write, giving up only if
+ * it detects that the fifo is not open for writing or that there is no room left
+ * in the fifo.  FifoToUser::write() thus represents a best effort at delivering
+ * the bytes contained in its argument data.
+ *
+ * FifoToUser::write() returns a pair. The first element reports how many bytes were
+ * successfully written to the fifo, while the second element records if a broken pipe
+ * was detected (this is useful for a caller who might want to retry the write later).
+ */
+std::pair<unsigned int,bool> FifoToUser::write(const std::vector<unsigned char>& data)
+{
+  if(_fd == -1){
+    throw std::runtime_error("FifoIO: FifoToUser write after move");
+  }
+
+  /* repeatedly try to write out the data, until either all data has been written, or
+   * the fifo is found not to be open for reading
+   */
+  ssize_t total_written = 0;
+  ssize_t ret;
+  while(total_written < data.size()){
+    ret = ::write(_fd,data.data()+total_written,data.size()-total_written);
+    if(ret == -1){
+      if(errno == EINTR){
+	continue;
+      }
+      if(errno == EPIPE){
+	// EPIPE indicates a "broken pipe", i.e. the fifo is not open for reading
+	return {total_written,true};
+      }
+      if(errno == EAGAIN){
+	// EAGAIN means the pipe is full
+	break;
+      }
+      throw FifoIOError("error writing to fifo "+_path);
+    }
+    total_written += ret;
+  }
+
+  return {total_written,false};
+}
+
+
+int FifoToUser::file_descriptor()
+{
+  return _fd;
+}
+
+
+bool FifoToUser::_sigpipe_off = false;

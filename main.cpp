@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "FifoIO.h"
 #include "SegmentNumGenerator.h"
 #include "SecretKey.h"
 #include "PeerConfig.h"

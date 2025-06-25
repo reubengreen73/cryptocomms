@@ -150,7 +150,7 @@ int FifoFromUser::file_descriptor()
  * for reading.
  */
 FifoToUser::FifoToUser(const std::string& path):
-  _path(path), _fd(-1)
+  _fd(-1), _path(path)
 {
   /* _sigpipe_off is a static member of FifoToUser which is initialized to false */
   if(not _sigpipe_off){
@@ -212,7 +212,7 @@ std::pair<unsigned int,bool> FifoToUser::write(const std::vector<unsigned char>&
   /* repeatedly try to write out the data, until either all data has been written, or
    * the fifo is found not to be open for reading
    */
-  ssize_t total_written = 0;
+  unsigned int total_written = 0;
   ssize_t ret;
   while(total_written < data.size()){
     ret = ::write(_fd,data.data()+total_written,data.size()-total_written);

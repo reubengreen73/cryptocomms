@@ -12,13 +12,10 @@ namespace
 {
   const std::string self_name = "self";
 
-  /* not_isspace() and is_isspace() are simple predicates to be passed to algorithms */
+  /* not_isspace() is a simple predicate to be passed to algorithms */
 
   bool not_isspace(const unsigned char ch)
   { return !std::isspace(ch); }
-
-  bool is_isspace(const unsigned char ch)
-  { return std::isspace(ch); }
 
 
   /* ltrim() and rtrim() perform in-place trimming of whitespace from strings */
@@ -574,6 +571,9 @@ ConfigFileParser::ConfigFileParser(const std::string& path)
       id = peer_config.id;
       ip_addr = peer_config.ip_addr;
       port = peer_config.port;
+      /* note that parse_peer_config sets peer_config.max_packet_size to -1 (via PeerConfig.clear() )
+       * if no maximum packet size is given in the config file
+       */
       max_packet_size = peer_config.max_packet_size;
     }
     else{

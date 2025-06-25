@@ -19,7 +19,7 @@ public:
   std::array<unsigned char,4> id;
   std::string ip_addr;
   uint16_t port;
-  unsigned int max_packet_size;
+  int max_packet_size; // a value of -1 here indicates no max packet size set
 };
 
 #endif

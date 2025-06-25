@@ -22,8 +22,8 @@ public:
   SecretKey key;
   std::vector<channel_spec> channels;
   std::string ip_addr;
-  int port;
-  int max_packet_size;
+  uint16_t port;
+  int max_packet_size; // a value of -1 here indicates no max packet size set
   void clear();
 };
 

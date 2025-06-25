@@ -97,15 +97,23 @@ int main(int argc, char** argv){
 
 $ADD_RUNTESTS_FUNCTIONS
 
+  bool all_options_known = true;
   for(int i=1;i<argc;i++){
     auto section_name = std::string(argv[i]);
-    try{
-      failed_tests_count += (runtests_funcs.at(section_name))();
-    }
-    catch(std::out_of_range& oor){
+    if(runtests_funcs.count(section_name) == 0){
       std::cout << std::string("ERROR: Unknown test section \\"") << section_name
         << std::string("\\"") << std::endl;
+      all_options_known = false;
     }
+  }
+  if(not all_options_known){
+    std::cout << std::endl << "NO TESTS PERFORMED" << std::endl;
+    return 0;
+  }
+
+  for(int i=1;i<argc;i++){
+    auto section_name = std::string(argv[i]);
+    failed_tests_count += (runtests_funcs.at(section_name))();
   }
 
   if(argc == 1){

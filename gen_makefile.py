@@ -42,6 +42,7 @@ makefile_template_string = """\
 
 
 DBG := -g
+CHECKS := -Wall -Wpedantic
 
 
 clean:
@@ -59,10 +60,10 @@ tester: tester.o $ALL_UNIT_O_FILES $ALL_TEST_O_FILES
 	g++ $$(DBG) -pthread tester.o $ALL_UNIT_O_FILES $ALL_TEST_O_FILES -o tester
 
 main.o: main.cpp $MAIN_H_FILES
-	g++ $$(DBG) -c main.cpp
+	g++ $$(DBG) -std=c++14 $$(CHECKS) -c main.cpp
 
 tester.o: tester.cpp
-	g++ $$(DBG) -c tester.cpp
+	g++ $$(DBG) -std=c++14 $$(CHECKS) -c tester.cpp
 
 tester.cpp: $ALL_TEST_CPP_FILES
 	./gen_tester.py
@@ -94,7 +95,7 @@ main_h_files = ' '.join(extract_quote_includes('main.cpp'))
 #     FILEPATH is the full path to the file relative to the main source directory
 rule_template_string = """\
 ${BASENAME}.o: ${FILEPATH} $H_FILES
-	g++ $$(DBG) -c ${FILEPATH}"""
+	g++ $$(DBG) -std=c++14 $$(CHECKS) -c ${FILEPATH}"""
 rule_template = Template(rule_template_string)
 
 # generate the rules to compile all the non-test .cpp files, for the UNIT_O_FILE_RULES

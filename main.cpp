@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include "FifoIO.h"
+#include "UDPSocket.h"
 #include "SegmentNumGenerator.h"
 #include "SecretKey.h"
 #include "PeerConfig.h"

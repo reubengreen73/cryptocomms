@@ -1,6 +1,7 @@
 [This file holds notes on the current status of cryptocomms while it is under construction]
 
-I have now created the ConfigFileParser module. The next task is to begin to flesh out Session
+I have now created the ConfigFileParser module and the modules FifoIO and UDPSocket, which
+handle communication in and out of cryptocomms. The next task is to begin to flesh out Session
 and Connection.
 
 The high-level structure of cryptocomms will be as follows. The top-level class is Session, which

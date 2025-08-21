@@ -28,9 +28,6 @@ private:
   uint_least64_t _next_num;
   uint_least64_t _new_reserve_needed;
   void reserve_nums();
-  uint_least64_t get_saved_segnum();
-  uint_least64_t get_segnum_sysclock();
-  void save_segnum(uint_least64_t segnum);
 };
 
 #endif

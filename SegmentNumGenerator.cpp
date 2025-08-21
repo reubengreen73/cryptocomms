@@ -6,10 +6,126 @@
 #include <fstream>
 
 
-/* our segment numbers are stored as unsigned 6 byte integers, so the maximum
- * value of a segment number is (2^48 - 1)
- */
-constexpr uint_least64_t segnum_max = 281474976710655U;
+namespace
+{
+
+  /* our segment numbers are stored as unsigned 6 byte integers, so the maximum
+   * value of a segment number is (2^48 - 1)
+   */
+  constexpr uint_least64_t segnum_max = 281474976710655U;
+
+  /* get_saved_segnum() loads the stored segment number from the file. This number
+   * is the highest segment number which could have been used by a previous run of the
+   * application.
+   *
+   * The application never creates this file, and for the application to run it must
+   * already exist and contain a valid stored segment number. Allowing the application
+   * to auto-create this file would weaken the effectiveness of recording which segment
+   * numbers have been used.
+   */
+  uint_least64_t get_saved_segnum(const std::string& path)
+  {
+    std::ifstream segnum_file(path);
+    if(!segnum_file){
+      throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
+			       +path);
+    }
+
+    std::string saved_segnum_string;
+    if(!std::getline(segnum_file,saved_segnum_string)){
+      throw std::runtime_error(std::string("SegmentNumGenerator: could not read stored segment number file: ")
+			       +path);
+    }
+
+    unsigned long long int saved_segnum;
+    try{
+      saved_segnum = std::stoull(saved_segnum_string);
+    } catch (const std::exception& ex) {
+      throw std::runtime_error(std::string("SegmentNumGenerator: could not parse stored segment number in file: ")
+			       +path+std::string(" (exception was :")+ex.what()+std::string(")"));
+    }
+
+    /* The segment number stored in the file should either be a value stored by a previous
+     * run of the application, or else a valid initial value set at installation (if there has
+     * not been any previous run of the application which stored a value). We check that the
+     * value from the file is strictly less than segnum_max, since the maximum number which a
+     * previous run of the application could have stored is (segnum_max -1), and the initial
+     * value set at installation should be vastly smaller than this.
+     */
+    if( not(saved_segnum < segnum_max) ){
+      throw std::runtime_error(std::string("SegmentNumGenerator: stored segment number in file: ")+path+
+			       std::string(" is too big"));
+    }
+
+    return saved_segnum;
+  }
+
+
+  /* get_segnum_sysclock() generates a fresh segment number from the system clock, by computing
+   * the number of milliseconds since the UNIX epoch.
+   */
+  uint_least64_t get_segnum_sysclock()
+  {
+    auto now = std::chrono::system_clock::now();
+    auto now_since_epoch = now.time_since_epoch();
+    unsigned long long int millis_since_epoch =
+      std::chrono::duration_cast<std::chrono::milliseconds>(now_since_epoch).count();
+    if(millis_since_epoch > segnum_max){
+      /* We check that the number of milliseconds since the epoch is at most
+       * segnum_max. The actual number of milliseconds since the epoch will not
+       * exceed this value until after 10,000 CE, and so this is just a sanity
+       * check on the system clock.
+       */
+      throw std::runtime_error("SegmentNumGenerator: timestamp from the system is too big");
+    }
+
+    return millis_since_epoch;
+  }
+
+
+  /* save_segnum() stores a segment number to back to the file. The number stored represents
+   * the highest segment number which could already have been handed out by next_num().
+   * save_segment() makes some effort to ensure that the file has been written to permanent
+   * storage before returning.
+   */
+  void save_segnum(uint_least64_t segnum, const std::string& path)
+  {
+    std::string segnum_string = std::to_string(segnum);
+    uint_least64_t reread_segnum;
+
+    /* In this loop, we try to write the new value to the file and check for
+     * a successful write by reading the value back from the file, retrying
+     * until we succeed.
+     */
+    while(true){
+      std::ofstream segnum_file(path,std::ios::trunc);
+      if(!segnum_file){
+	throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
+				 +path);
+      }
+
+      segnum_file << segnum_string;
+      segnum_file.close();
+
+      /* We want to be as sure as we can that the new value has been written to the file,
+       * so we read the value back from the file and check. This should work first time
+       * pretty much always...
+       */
+      reread_segnum = get_saved_segnum(path);
+      if(reread_segnum == segnum)
+	break;
+
+      /* ... but if it does not work then we just sleep for 0.1 second and try again. This
+       * is very crude but it's the only think I can think of other than just throwing an
+       * error. Since save_segnum() is called once at application start-up, and very
+       * infrequently (if ever) thereafter (assuming _reserved is set to a reasonable value),
+       * this behaviour is acceptable.
+       */
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+  }
+
+}
 
 
 /* "path" is the path to the file which records used segment numbers,
@@ -77,7 +193,7 @@ const std::lock_guard<std::mutex> _lock_guard(_lock);
  */
 void SegmentNumGenerator::reserve_nums()
 {
-  uint_least64_t saved_segnum = get_saved_segnum();
+  uint_least64_t saved_segnum = get_saved_segnum(_path);
 
   /* Generate a segment number from the system clock. We want to ensure that
    * this is a segment number that no previous run of the application could
@@ -104,118 +220,5 @@ void SegmentNumGenerator::reserve_nums()
   }
   _new_reserve_needed = next_new_reserve_needed;
 
-  save_segnum(_new_reserve_needed-1);
-}
-
-
-/* SegmentNumGenerator::get_saved_segnum() loads the stored segment number from
- * the file. This number is the highest segment number which could have been used
- * by a previous run of the application.
- *
- * The application never creates this file, and for the application to run it must
- * already exist and contain a valid stored segment number. Allowing the application
- * to auto-create this file would weaken the effectiveness of recording which segment
- * numbers have been used.
- */
-uint_least64_t SegmentNumGenerator::get_saved_segnum()
-{
-  std::ifstream segnum_file(_path);
-  if(!segnum_file){
-    throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
-			     +_path);
-  }
-
-  std::string saved_segnum_string;
-  if(!std::getline(segnum_file,saved_segnum_string)){
-    throw std::runtime_error(std::string("SegmentNumGenerator: could not read stored segment number file: ")
-			     +_path);
-  }
-
-  unsigned long long int saved_segnum;
-  try{
-    saved_segnum = std::stoull(saved_segnum_string);
-  } catch (const std::exception& ex) {
-    throw std::runtime_error(std::string("SegmentNumGenerator: could not parse stored segment number in file: ")
-			     +_path+std::string(" (exception was :")+ex.what()+std::string(")"));
-  }
-
-  /* The segment number stored in the file should either be a value stored by a previous
-   * run of the application, or else a valid initial value set at installation (if there has
-   * not been any previous run of the application which stored a value). We check that the
-   * value from the file is strictly less than segnum_max, since the maximum number which a
-   * previous run of the application could have stored is (segnum_max -1), and the initial
-   * value set at installation should be vastly smaller than this.
-   */
-  if( not(saved_segnum < segnum_max) ){
-    throw std::runtime_error(std::string("SegmentNumGenerator: stored segment number in file: ")+_path+
-			     std::string(" is too big"));
-  }
-
-  return saved_segnum;
-}
-
-
-/* SegmentNumGenerator::get_segnum_sysclock() generates a fresh segment number from the
- * system clock, by computing the number of milliseconds since the UNIX epoch.
- */
-uint_least64_t SegmentNumGenerator::get_segnum_sysclock()
-{
-  auto now = std::chrono::system_clock::now();
-  auto now_since_epoch = now.time_since_epoch();
-  unsigned long long int millis_since_epoch =
-    std::chrono::duration_cast<std::chrono::milliseconds>(now_since_epoch).count();
-  if(millis_since_epoch > segnum_max){
-    /* We check that the number of milliseconds since the epoch is at most
-     * segnum_max. The actual number of milliseconds since the epoch will not
-     * exceed this value until after 10,000 CE, and so this is just a sanity
-     * check on the system clock.
-     */
-    throw std::runtime_error("SegmentNumGenerator: timestamp from the system is too big");
-  }
-
-  return millis_since_epoch;
-}
-
-
-/* SegmentNumGenerator::save_segnum() stores a segment number to back to the file.
- * The number stored represents the highest segment number which could already have
- * been handed out by next_num(). save_segment() makes some effort to ensure that
- * the file has been written to permanent storage before returning.
- */
-void SegmentNumGenerator::save_segnum(uint_least64_t segnum)
-{
-
-   std::string segnum_string = std::to_string(segnum);
-   uint_least64_t reread_segnum;
-
-   /* In this loop, we try to write the new value to the file and check for
-    * a successful write by reading the value back from the file, retrying
-    * until we succeed.
-    */
-   while(true){
-     std::ofstream segnum_file(_path,std::ios::trunc);
-     if(!segnum_file){
-       throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
-				+_path);
-     }
-
-     segnum_file << segnum_string;
-     segnum_file.close();
-
-     /* We want to be as sure as we can that the new value has been written to the file,
-      * so we read the value back from the file and check. This should work first time
-      * pretty much always...
-      */
-     reread_segnum = get_saved_segnum();
-     if(reread_segnum == segnum)
-       break;
-
-     /* ... but if it does not work then we just sleep for 0.1 second and try again. This
-      * is very crude but it's the only think I can think of other than just throwing an
-      * error. Since save_segnum() is called once at application start-up, and very
-      * infrequently (if ever) thereafter (assuming _reserved is set to a reasonable value),
-      * this behaviour is acceptable.
-      */
-     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-   }
+  save_segnum(_new_reserve_needed-1,_path);
 }

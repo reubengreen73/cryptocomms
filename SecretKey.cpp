@@ -12,6 +12,14 @@ namespace
 }
 
 
+/* SecretKey::SecretKey() initializes a SecretKey into an invalid
+ * state. Note that we do not need to initialize the key as the
+ * SecretKey is marked as not valid.
+ */
+SecretKey::SecretKey():
+  valid(false){}
+
+
 /* SecretKey::SecretKey(const std::string& str) constructs a SecretKey which
  * holds the 32-byte key specified in hexadecimal by the string str.
  * str must consist of exactly 64 characters, all of which must be one of
@@ -20,7 +28,8 @@ namespace
  * which is set as the value of this->key.
  *
  */
-SecretKey::SecretKey(const std::string& str)
+SecretKey::SecretKey(const std::string& str):
+  valid(false)
 {
   if(str.size() != 64){
     throw std::runtime_error("SecretKey: initialization string has wrong length");
@@ -48,15 +57,22 @@ SecretKey::SecretKey(const std::string& str)
   catch(...){
     throw std::runtime_error("SecretKey: error initializing from hex string");
   }
+
+  valid = true;
 }
 
 
 /* move assignment includes explicit zero-ing of the old key */
 SecretKey& SecretKey::operator=(SecretKey&& other)
 {
+  if(this == &other){
+    return *this;
+  }
+
   for(int i=0;i<32;i++){
     key[i] = other.key[i];
   }
+  valid = other.valid;
   other.erase();
 
   return *this;
@@ -68,6 +84,7 @@ SecretKey& SecretKey::operator=(const SecretKey& other)
   for(int i=0;i<32;i++){
     key[i] = other.key[i];
   }
+ valid = other.valid;
 
   return *this;
 }
@@ -86,6 +103,7 @@ void SecretKey::erase()
   for(int i=0;i<32;i++){
     key[i]=0;
   }
+  valid = false;
 }
 
 
@@ -93,16 +111,33 @@ SecretKey::~SecretKey()
 { erase(); }
 
 
+/* Note that SecretKey::data() checks its validity before handing
+ * out the pointer to its key data, but after this it is the
+ * responsibility of whatever owns the SecretKey to ensure that
+ * it does not become invalid while the key data is still in use.
+ */
 unsigned char* SecretKey::data()
-{ return key; }
+{
+  check_valid();
+  return key;
+}
 
 
+/* see the note above the non-const version of SecretKey::data() for
+   information on validity checking.
+ */
 const unsigned char* SecretKey::data() const
-{ return key; }
+{
+  check_valid();
+  return key;
+}
 
 
 unsigned char& SecretKey::operator[](std::size_t pos)
-{ return key[pos]; }
+{
+  check_valid();
+  return key[pos];
+}
 
 
 /* Note that this operator[] returns by const reference, with a reference to
@@ -110,7 +145,19 @@ unsigned char& SecretKey::operator[](std::size_t pos)
  * secret key is avoided.
  */
 const unsigned char&  SecretKey::operator[](std::size_t pos) const
-{ return key[pos]; }
+{
+  check_valid();
+  return key[pos];
+}
+
+
+/* note that this validity checking is not thread-safe */
+void SecretKey::check_valid() const
+{
+  if(not valid){
+    throw std::runtime_error("SecretKey: key used while invalid");
+  }
+}
 
 
 namespace

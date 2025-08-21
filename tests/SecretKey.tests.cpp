@@ -40,3 +40,19 @@ TESTFUNC(hex_invalid_char)
   hex_str = " 0010a0Aa0A0ffFF00010203c1c2c3f0fafbfc01234567890abcdef0ABCDEF00";
   TESTTHROW(SecretKey sk(hex_str),"SecretKey: \" \" is not a valid hex digit");
 }
+
+/* check that a default-initialized SecretKey is not valid */
+TESTFUNC(default_initialized_invalid)
+{
+  SecretKey sk;
+  TESTTHROW(sk.data(),"SecretKey: key used while invalid");
+}
+
+/* check that a moved-from SecretKey is not valid */
+TESTFUNC(moved_from_invalid)
+{
+  std::string hex_str = "00010a0Aa0A0ffFF00010203c1c2c3f0fafbfc01234567890abcdef0ABCDEF00";
+  SecretKey sk1(hex_str);
+  SecretKey sk2 = std::move(sk1);
+  TESTTHROW(sk1.data(),"SecretKey: key used while invalid");
+}

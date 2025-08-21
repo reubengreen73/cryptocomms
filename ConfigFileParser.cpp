@@ -13,13 +13,11 @@ namespace
   const std::string self_name = "self";
 
   /* not_isspace() is a simple predicate to be passed to algorithms */
-
   bool not_isspace(const unsigned char ch)
   { return !std::isspace(ch); }
 
 
   /* ltrim() and rtrim() perform in-place trimming of whitespace from strings */
-
   void ltrim(std::string &s)
   {
     auto non_whitespace_begin = std::find_if(s.begin(),s.end(),not_isspace);

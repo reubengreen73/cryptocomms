@@ -1,5 +1,11 @@
 #include "FifoIO.h"
 
+/* Note that we use the C POSIX interface exclusively in this file. In particular, for
+ * functionality from the C standard library we use the POSIX compatible C headers like
+ * signal.h rather than csignal, and we use names in the global namespace rather than std::
+ * It seems better to be consistent with POSIX rather than mixing and matching the two
+ * standards.
+ */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

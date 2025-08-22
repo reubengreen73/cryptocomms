@@ -17,16 +17,16 @@
 class SegmentNumGenerator
 {
 public:
-  SegmentNumGenerator(std::string path, uint reserved = 1000);
-  uint_least64_t next_num();
-  void set_reserved(uint reserved);
+  SegmentNumGenerator(std::string path, unsigned int reserved = 1000);
+  std::uint_least64_t next_num();
+  void set_reserved(unsigned int reserved);
 
 private:
   std::string _path;
   std::mutex _lock;
-  uint _reserved;
-  uint_least64_t _next_num;
-  uint_least64_t _new_reserve_needed;
+  unsigned int _reserved;
+  std::uint_least64_t _next_num;
+  std::uint_least64_t _new_reserve_needed;
   void reserve_nums();
 };
 

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <cstdint>
 
 #include "PeerConfig.h"
 
@@ -18,7 +19,7 @@ public:
   std::vector<PeerConfig> peer_configs;
   std::array<unsigned char,4> id;
   std::string ip_addr;
-  uint16_t port;
+  std::uint16_t port;
   int max_packet_size; // a value of -1 here indicates no max packet size set
 };
 

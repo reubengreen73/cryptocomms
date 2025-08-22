@@ -101,7 +101,7 @@ namespace
    */
   int parse_integer(const std::string& str, const int least, const int greatest)
   {
-    size_t pos;
+    std::size_t pos;
     int str_int = std::stoi(str,&pos);
 
     if(pos < str.size()){

@@ -9,6 +9,7 @@
 #include <array>
 #include <vector>
 #include <utility>
+#include <cstdint>
 
 #include "SecretKey.h"
 
@@ -22,7 +23,7 @@ public:
   SecretKey key;
   std::vector<channel_spec> channels;
   std::string ip_addr;
-  uint16_t port;
+  std::uint16_t port;
   int max_packet_size; // a value of -1 here indicates no max packet size set
   void clear();
 };

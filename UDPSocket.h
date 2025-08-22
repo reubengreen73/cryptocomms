@@ -26,8 +26,8 @@ struct UDPMessage
 class UDPSocket
 {
 public:
-  UDPSocket(const std::string& ip_addr, uint16_t port);
-  bool send(const std::vector<unsigned char>& msg, const std::string& dest_addr, uint16_t dest_port);
+  UDPSocket(const std::string& ip_addr, in_port_t port);
+  bool send(const std::vector<unsigned char>& msg, const std::string& dest_addr, in_port_t dest_port);
   UDPMessage receive();
   const std::string& bound_addr();
   in_port_t bound_port();

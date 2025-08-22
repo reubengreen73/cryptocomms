@@ -1,10 +1,17 @@
 #include "UDPSocket.h"
 
-#include <cstring>
+/* Note that we use the C POSIX interface exclusively in this file. In particular, for
+ * functionality from the C standard library we use the POSIX compatible C headers like
+ * string.h rather than cstring, and we use names in the global namespace rather than std::
+ * It seems better to be consistent with POSIX rather than mixing and matching the two
+ * standards.
+ */
+#include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 
 /* UDPSocket::UDPSocket() makes a UDP socket for both sending and receiving
  * bound to the specified ip address and port.
@@ -12,7 +19,7 @@
  * Note that this constructor is not thread safe, see comment about inet_ntoa()
  * in the function body.
  */
-UDPSocket::UDPSocket(const std::string& ip_addr, uint16_t port)
+UDPSocket::UDPSocket(const std::string& ip_addr, in_port_t port)
   : _recv_buff(16)
 {
   /* create the socket */
@@ -88,7 +95,7 @@ UDPSocket& UDPSocket::operator= (UDPSocket&& other)
  * whether the message was sent correctly. If the value returned is false, the caller can call the
  * function again to retry sending if desired.
  */
-bool UDPSocket::send(const std::vector<unsigned char>& msg, const std::string& dest_addr, uint16_t dest_port)
+bool UDPSocket::send(const std::vector<unsigned char>& msg, const std::string& dest_addr, in_port_t dest_port)
 {
   if(_socket_fd == -1){
     throw std::runtime_error("UDPSocket: send() after move");

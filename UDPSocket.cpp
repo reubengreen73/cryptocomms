@@ -1,7 +1,7 @@
 #include "UDPSocket.h"
 
-/* Note that we use the C POSIX interface exclusively in this file. In particular, for
- * functionality from the C standard library we use the POSIX compatible C headers like
+/* Note that we use the C POSIX interface exclusively in this file for functionality from
+ * the C standard library. In particular, we use the POSIX compatible C headers like
  * string.h rather than cstring, and we use names in the global namespace rather than std::
  * It seems better to be consistent with POSIX rather than mixing and matching the two
  * standards.
@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+
+#include <stdexcept>
 
 /* UDPSocket::UDPSocket() makes a UDP socket for both sending and receiving
  * bound to the specified ip address and port.

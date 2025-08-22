@@ -13,7 +13,6 @@
 #include <netinet/in.h>
 #include <string>
 #include <vector>
-#include <stdexcept>
 
 struct UDPMessage
 {

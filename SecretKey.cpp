@@ -133,9 +133,12 @@ const unsigned char* SecretKey::data() const
 }
 
 
-unsigned char& SecretKey::operator[](std::size_t pos)
+unsigned char& SecretKey::operator[](unsigned int pos)
 {
   check_valid();
+  if(pos > 31){
+    throw std::runtime_error("SecretKey: index out of range");
+  }
   return key[pos];
 }
 
@@ -144,9 +147,12 @@ unsigned char& SecretKey::operator[](std::size_t pos)
  * this->key. If the caller captures this reference, than all copying of the
  * secret key is avoided.
  */
-const unsigned char&  SecretKey::operator[](std::size_t pos) const
+const unsigned char&  SecretKey::operator[](unsigned int pos) const
 {
   check_valid();
+  if(pos > 31){
+    throw std::runtime_error("SecretKey: index out of range");
+  }
   return key[pos];
 }
 

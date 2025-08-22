@@ -26,8 +26,8 @@ public:
 
   ~SecretKey();
 
-  unsigned char& operator[](std::size_t pos);
-  const unsigned char&  operator[](std::size_t pos) const;
+  unsigned char& operator[](unsigned int pos);
+  const unsigned char&  operator[](unsigned int pos) const;
 
   unsigned char* data();
   const unsigned char* data() const;

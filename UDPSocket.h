@@ -43,10 +43,10 @@ public:
   ~UDPSocket();
 
 private:
-  int _socket_fd;
-  std::string _bound_addr;
-  in_port_t _bound_port; // stored in *host* byte order
-  std::vector<unsigned char> _recv_buff;
+  int socket_fd_;
+  std::string bound_addr_;
+  in_port_t bound_port_; // stored in *host* byte order
+  std::vector<unsigned char> recv_buff_;
 };
 
 #endif

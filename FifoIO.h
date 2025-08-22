@@ -25,9 +25,9 @@ public:
   int file_descriptor();
 
 private:
-  int _fd;
-  std::vector<unsigned char> _read_buff;
-  const std::string _path;
+  int fd_;
+  std::vector<unsigned char> read_buff_;
+  const std::string path_;
 };
 
 
@@ -45,9 +45,9 @@ public:
   int file_descriptor();
 
 private:
-  int _fd;
-  static bool _sigpipe_off;
-  const std::string _path;
+  int fd_;
+  static bool sigpipe_off_;
+  const std::string path_;
 };
 
 

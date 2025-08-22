@@ -118,7 +118,7 @@ namespace
       /* ... but if it does not work then we just sleep for 0.1 second and try again. This
        * is very crude but it's the only think I can think of other than just throwing an
        * error. Since save_segnum() is called once at application start-up, and very
-       * infrequently (if ever) thereafter (assuming _reserved is set to a reasonable value),
+       * infrequently (if ever) thereafter (assuming reserved_ is set to a reasonable value),
        * this behaviour is acceptable.
        */
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -133,36 +133,36 @@ namespace
  * a fresh reservation of numbers happens
  */
 SegmentNumGenerator::SegmentNumGenerator(std::string path, unsigned int reserved):
-  _path(path)
+  path_(path)
 {
   set_reserved(reserved);
 
-  /* Setting both _next_num and _new_reserve_needed to the same value will cause
+  /* Setting both next_num_ and new_reserve_needed_ to the same value will cause
    * reserve_nums() to be called on the first invocation of next_num(). This allows
-   * set_reserve() to be called to set a better value for _reserved before a
+   * set_reserve() to be called to set a better value for reserved_ before a
    * reservation of numbers happens
    */
-  _next_num = 0;
-  _new_reserve_needed = 0;
+  next_num_ = 0;
+  new_reserve_needed_ = 0;
 }
 
 
 /* SegmentNumGenerator::next_num() returns a fresh segment number. The internal
  * state of SegmentNumGenerator is simple: the next segment number to be handed
- * out by next_num() is stored in _next_num, and the last segment number which
+ * out by next_num() is stored in next_num_, and the last segment number which
  * can be handed out before a new internal reservation of segment numbers is needed
- * is (_new_reserve_needed - 1), so the condition for calling reserve_nums() is
- * (_next_num == _new_reserve_needed).
+ * is (new_reserve_needed_ - 1), so the condition for calling reserve_nums() is
+ * (next_num_ == new_reserve_needed_).
  */
 std::uint_least64_t SegmentNumGenerator::next_num()
 {
-const std::lock_guard<std::mutex> _lock_guard(_lock);
+const std::lock_guard<std::mutex> guard_for_lock(lock_);
 
- if(_next_num == _new_reserve_needed){
+ if(next_num_ == new_reserve_needed_){
    reserve_nums();
  }
 
- return _next_num++;
+ return next_num_++;
 }
 
 
@@ -171,13 +171,13 @@ const std::lock_guard<std::mutex> _lock_guard(_lock);
  */
 void SegmentNumGenerator::set_reserved(unsigned int reserved)
 {
-const std::lock_guard<std::mutex> _lock_guard(_lock);
+const std::lock_guard<std::mutex> guard_for_lock(lock_);
 
   if(reserved == 0){
     throw std::runtime_error("SegmentNumGenerator: set_reserved called with 0");
   }
 
-  _reserved = reserved;
+  reserved_ = reserved;
 }
 
 
@@ -193,7 +193,7 @@ const std::lock_guard<std::mutex> _lock_guard(_lock);
  */
 void SegmentNumGenerator::reserve_nums()
 {
-  std::uint_least64_t saved_segnum = get_saved_segnum(_path);
+  std::uint_least64_t saved_segnum = get_saved_segnum(path_);
 
   /* Generate a segment number from the system clock. We want to ensure that
    * this is a segment number that no previous run of the application could
@@ -201,7 +201,7 @@ void SegmentNumGenerator::reserve_nums()
    * always increased monotonically), so we ensure that we see an increment in
    * the generated segment number before using it. This is acceptable since
    * reserve_nums() is called once at application start-up, and very infrequently
-   * (if ever) thereafter (assuming _reserved is set to a reasonable value).
+   * (if ever) thereafter (assuming reserved_ is set to a reasonable value).
    */
   std::uint_least64_t base_sysclock_segnum, sysclock_segnum;
   sysclock_segnum = base_sysclock_segnum = get_segnum_sysclock();
@@ -213,12 +213,12 @@ void SegmentNumGenerator::reserve_nums()
   /* calculate the next segment number, and update the upper limit on segment
    * numbers before another reserve_nums() call is needed
    */
-  _next_num = std::max(saved_segnum+1,sysclock_segnum);
-  std::uint_least64_t next_new_reserve_needed = _next_num + _reserved;
+  next_num_ = std::max(saved_segnum+1,sysclock_segnum);
+  std::uint_least64_t next_new_reserve_needed = next_num_ + reserved_;
   if(next_new_reserve_needed > segnum_max){
     throw std::runtime_error("SegmentNumGenerator: new upper segment number limit is too high");
   }
-  _new_reserve_needed = next_new_reserve_needed;
+  new_reserve_needed_ = next_new_reserve_needed;
 
-  save_segnum(_new_reserve_needed-1,_path);
+  save_segnum(new_reserve_needed_-1,path_);
 }

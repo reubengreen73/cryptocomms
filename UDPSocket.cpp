@@ -22,11 +22,11 @@
  * in the function body.
  */
 UDPSocket::UDPSocket(const std::string& ip_addr, in_port_t port)
-  : _recv_buff(16)
+  : recv_buff_(16)
 {
   /* create the socket */
-  _socket_fd = socket(AF_INET,SOCK_DGRAM,0);
-  if(_socket_fd == -1){
+  socket_fd_ = socket(AF_INET,SOCK_DGRAM,0);
+  if(socket_fd_ == -1){
     throw std::runtime_error("UDPSocket: could not create socket");
   }
 
@@ -37,36 +37,36 @@ UDPSocket::UDPSocket(const std::string& ip_addr, in_port_t port)
   bind_addr.sin_addr.s_addr = inet_addr(ip_addr.c_str());
   if(bind_addr.sin_addr.s_addr == (in_addr_t)(-1)){
     // note that POSIX states that inet_addr retuns (in_addr_t)(-1) on error
-    close(_socket_fd);
+    close(socket_fd_);
     throw std::runtime_error("UDPSocket: bad ip address for binding");
   }
   bind_addr.sin_port = htons(port);
 
   /* bind the socket */
-  if(bind(_socket_fd,(sockaddr *)&bind_addr, sizeof(bind_addr)) == -1){
-    close(_socket_fd);
+  if(bind(socket_fd_,(sockaddr *)&bind_addr, sizeof(bind_addr)) == -1){
+    close(socket_fd_);
     throw std::runtime_error("UDPSocket: could not bind");
   }
 
   /* get information about the bound socket */
   socklen_t socklen = sizeof(bind_addr);
-  if(getsockname(_socket_fd, (sockaddr *)&bind_addr, &socklen) == -1){
-    close(_socket_fd);
+  if(getsockname(socket_fd_, (sockaddr *)&bind_addr, &socklen) == -1){
+    close(socket_fd_);
     throw std::runtime_error("UDPSocket: could not get socket information after bind");
   }
 
   /* inet_ntoa() is not thread-safe, but cryptocomms only creates one UDPSocket and does
    * not use inet_ntoa elsewhere, so this is no problem
    */
-  _bound_addr = std::string(inet_ntoa(bind_addr.sin_addr));
-  _bound_port = ntohs(bind_addr.sin_port);
+  bound_addr_ = std::string(inet_ntoa(bind_addr.sin_addr));
+  bound_port_ = ntohs(bind_addr.sin_port);
 }
 
 
 UDPSocket::~UDPSocket()
 {
-  if(_socket_fd != -1){
-    close(_socket_fd);
+  if(socket_fd_ != -1){
+    close(socket_fd_);
   }
 }
 
@@ -81,13 +81,13 @@ UDPSocket& UDPSocket::operator= (UDPSocket&& other)
     return *this;
   }
 
-  _socket_fd = other._socket_fd;
-  other._socket_fd = -1;
+  socket_fd_ = other.socket_fd_;
+  other.socket_fd_ = -1;
 
-  _bound_addr = other._bound_addr;
-  _bound_port = other._bound_port;
+  bound_addr_ = other.bound_addr_;
+  bound_port_ = other.bound_port_;
 
-  _recv_buff = std::move(other._recv_buff);
+  recv_buff_ = std::move(other.recv_buff_);
 
   return *this;
 }
@@ -99,7 +99,7 @@ UDPSocket& UDPSocket::operator= (UDPSocket&& other)
  */
 bool UDPSocket::send(const std::vector<unsigned char>& msg, const std::string& dest_addr, in_port_t dest_port)
 {
-  if(_socket_fd == -1){
+  if(socket_fd_ == -1){
     throw std::runtime_error("UDPSocket: send() after move");
   }
 
@@ -117,7 +117,7 @@ bool UDPSocket::send(const std::vector<unsigned char>& msg, const std::string& d
   /* send the data, retrying if sendto() is interrupted */
   ssize_t sent_size;
   do{
-    sent_size = sendto(_socket_fd,msg.data(),msg.size(),0,
+    sent_size = sendto(socket_fd_,msg.data(),msg.size(),0,
 		       (sockaddr *)&dest_addr_struct, sizeof(dest_addr_struct));
   } while(sent_size == -1 && errno == EINTR);
 
@@ -140,14 +140,14 @@ bool UDPSocket::send(const std::vector<unsigned char>& msg, const std::string& d
  * UDPSocket::receive() communicates errors to the caller via the boolean "valid"
  * member of the returned UDPMessage struct (a "false" value indicates an error).
  *
- * Note that UDPSocket::receive() uses the _recv_buff member to read data from the socket,
+ * Note that UDPSocket::receive() uses the recv_buff_ member to read data from the socket,
  * and uses the non-thread-safe function inet_ntoa(), and is thus not thread-safe.
  * However, there should not be any situation in which one UDPSocket is being used to
  * receive() by two different threads.
  */
 UDPMessage UDPSocket::receive()
 {
-  if(_socket_fd == -1)
+  if(socket_fd_ == -1)
     throw std::runtime_error("UDPSocket: receive() after move");
 
   /* We use the standard pattern of first doing recvfrom() with MSG_PEEK set to test
@@ -160,8 +160,8 @@ UDPMessage UDPSocket::receive()
   sockaddr_in source_addr_struct;
   socklen_t addr_len = sizeof(source_addr_struct);
 
-  /* We may need to enlarge _recv_buff to accept the next message. We repeatedly
-   * peek at the data and enlarge _recv_buff until the number of bytes retrieved
+  /* We may need to enlarge recv_buff_ to accept the next message. We repeatedly
+   * peek at the data and enlarge recv_buff_ until the number of bytes retrieved
    * is less than the buffer size (which means we did get the whole message).
    *
    * On Linux we could avoid the loop by using MSG_TRUNC as a flag for recvfrom, but
@@ -171,7 +171,7 @@ UDPMessage UDPSocket::receive()
 
     /* peek at the data, retrying if recvfrom() is interrupted */
     do{
-      recvfrom_size = recvfrom(_socket_fd, _recv_buff.data(), _recv_buff.size(), MSG_PEEK,
+      recvfrom_size = recvfrom(socket_fd_, recv_buff_.data(), recv_buff_.size(), MSG_PEEK,
 			       (sockaddr*)&source_addr_struct, &addr_len);
     } while(recvfrom_size == -1 && errno == EINTR);
 
@@ -186,8 +186,8 @@ UDPMessage UDPSocket::receive()
     /* recvfrom_size has been returned from recvfrom() on a UDP socket and so will not
      * overflow an unsigned int
      */
-    if(_recv_buff.size() == static_cast<unsigned int>(recvfrom_size)){
-      _recv_buff.resize(2*_recv_buff.size());
+    if(recv_buff_.size() == static_cast<unsigned int>(recvfrom_size)){
+      recv_buff_.resize(2*recv_buff_.size());
     }
     else{
       break;
@@ -198,7 +198,7 @@ UDPMessage UDPSocket::receive()
   /* read the data, retrying if recvfrom() is interrupted */
   do{
     addr_len = sizeof(source_addr_struct);
-    recvfrom_size = recvfrom(_socket_fd, _recv_buff.data(), _recv_buff.size(), 0,
+    recvfrom_size = recvfrom(socket_fd_, recv_buff_.data(), recv_buff_.size(), 0,
 			     (sockaddr*)&source_addr_struct, &addr_len);
   } while(recvfrom_size == -1 && errno == EINTR);
 
@@ -209,7 +209,7 @@ UDPMessage UDPSocket::receive()
   //note that inet_ntoa() is not thread-safe
   return {
     true,
-    std::vector<unsigned char>(_recv_buff.begin(),_recv_buff.begin()+recvfrom_size),
+    std::vector<unsigned char>(recv_buff_.begin(),recv_buff_.begin()+recvfrom_size),
     std::string(inet_ntoa(source_addr_struct.sin_addr)),
     ntohs(source_addr_struct.sin_port)
   };
@@ -217,8 +217,8 @@ UDPMessage UDPSocket::receive()
 
 
 const std::string& UDPSocket::bound_addr()
-{ return _bound_addr; }
+{ return bound_addr_; }
 
 
 in_port_t UDPSocket::bound_port()
-{ return _bound_port; }
+{ return bound_port_; }

@@ -73,7 +73,7 @@ namespace
 
 
 FifoFromUser::FifoFromUser(const std::string& path):
-  _fd(open_fifo_read(path)), _path(path){}
+  fd_(open_fifo_read(path)), path_(path){}
 
 
 FifoFromUser::FifoFromUser(FifoFromUser&& other)
@@ -83,8 +83,8 @@ FifoFromUser::FifoFromUser(FifoFromUser&& other)
 FifoFromUser& FifoFromUser::operator=(FifoFromUser&& other)
 {
   if(this != &other){
-    _fd = other._fd;
-    other._fd = -1;
+    fd_ = other.fd_;
+    other.fd_ = -1;
   }
   return *this;
 }
@@ -92,8 +92,8 @@ FifoFromUser& FifoFromUser::operator=(FifoFromUser&& other)
 
 FifoFromUser::~FifoFromUser()
 {
-  if(_fd != -1){
-    close(_fd);
+  if(fd_ != -1){
+    close(fd_);
   }
 }
 
@@ -104,15 +104,15 @@ FifoFromUser::~FifoFromUser()
  */
 std::vector<unsigned char> FifoFromUser::read(unsigned int count)
 {
-  if(_fd == -1){
+  if(fd_ == -1){
     throw std::runtime_error("FifoIO: FifoFromUser read after move");
   }
 
-  if(_read_buff.size() < count){
-    _read_buff.resize(count);
+  if(read_buff_.size() < count){
+    read_buff_.resize(count);
   }
 
-  /* keep making reads from the fifo into _read_buff until one of the following
+  /* keep making reads from the fifo into read_buff_ until one of the following
    * occurs: we get enough bytes; the read would block if it were a blocking fifo
    * (meaning that the write end of the fifo is open but there is no data to read);
    * the fifo is at end-of-file (meaning that the write end of the fifo is closed)
@@ -120,15 +120,15 @@ std::vector<unsigned char> FifoFromUser::read(unsigned int count)
   ssize_t total_read = 0;
   ssize_t ret;
   while(total_read < count){
-    ret = ::read(_fd,_read_buff.data()+total_read,count-total_read);
+    ret = ::read(fd_,read_buff_.data()+total_read,count-total_read);
     if(ret == -1){
       if(errno == EINTR){
 	continue;
       }
-      if(errno == EAGAIN){ // the read would block if _fd were not O_NONBLOCK
+      if(errno == EAGAIN){ // the read would block if fd_ were not O_NONBLOCK
 	break;
       }
-      throw FifoIOError("error reading from fifo "+_path);
+      throw FifoIOError("error reading from fifo "+path_);
     }
     if(ret == 0){ // end-of-file on fifo
       break;
@@ -136,13 +136,13 @@ std::vector<unsigned char> FifoFromUser::read(unsigned int count)
     total_read += ret;
   }
 
-  return std::vector<unsigned char>(_read_buff.begin(),_read_buff.begin()+total_read);
+  return std::vector<unsigned char>(read_buff_.begin(),read_buff_.begin()+total_read);
 }
 
 
 int FifoFromUser::file_descriptor()
 {
-  return _fd;
+  return fd_;
 }
 
 
@@ -156,19 +156,19 @@ int FifoFromUser::file_descriptor()
  * for reading.
  */
 FifoToUser::FifoToUser(const std::string& path):
-  _fd(-1), _path(path)
+  fd_(-1), path_(path)
 {
-  /* _sigpipe_off is a static member of FifoToUser which is initialized to false */
-  if(not _sigpipe_off){
+  /* sigpipe_off_ is a static member of FifoToUser which is initialized to false */
+  if(not sigpipe_off_){
     signal(SIGPIPE, SIG_IGN);
-    _sigpipe_off = true;
+    sigpipe_off_ = true;
   }
 
   int fd = open_fifo_read(path);
 
-  while(_fd == -1){
-    _fd = open(path.c_str(), O_WRONLY|O_NONBLOCK);
-    if( (_fd == -1) && (errno != EINTR) ){
+  while(fd_ == -1){
+    fd_ = open(path.c_str(), O_WRONLY|O_NONBLOCK);
+    if( (fd_ == -1) && (errno != EINTR) ){
       throw std::runtime_error("could not open "+path);
     }
   }
@@ -184,8 +184,8 @@ FifoToUser::FifoToUser(FifoToUser&& other)
 FifoToUser& FifoToUser::operator=(FifoToUser&& other)
 {
   if(this != &other){
-    _fd = other._fd;
-    other._fd = -1;
+    fd_ = other.fd_;
+    other.fd_ = -1;
   }
   return *this;
 }
@@ -193,8 +193,8 @@ FifoToUser& FifoToUser::operator=(FifoToUser&& other)
 
 FifoToUser::~FifoToUser()
 {
-  if(_fd != -1){
-    close(_fd);
+  if(fd_ != -1){
+    close(fd_);
   }
 }
 
@@ -211,7 +211,7 @@ FifoToUser::~FifoToUser()
  */
 std::pair<unsigned int,bool> FifoToUser::write(const std::vector<unsigned char>& data)
 {
-  if(_fd == -1){
+  if(fd_ == -1){
     throw std::runtime_error("FifoIO: FifoToUser write after move");
   }
 
@@ -221,7 +221,7 @@ std::pair<unsigned int,bool> FifoToUser::write(const std::vector<unsigned char>&
   unsigned int total_written = 0;
   ssize_t ret;
   while(total_written < data.size()){
-    ret = ::write(_fd,data.data()+total_written,data.size()-total_written);
+    ret = ::write(fd_,data.data()+total_written,data.size()-total_written);
     if(ret == -1){
       if(errno == EINTR){
 	continue;
@@ -234,7 +234,7 @@ std::pair<unsigned int,bool> FifoToUser::write(const std::vector<unsigned char>&
 	// EAGAIN means the pipe is full
 	break;
       }
-      throw FifoIOError("error writing to fifo "+_path);
+      throw FifoIOError("error writing to fifo "+path_);
     }
     total_written += ret;
   }
@@ -245,8 +245,8 @@ std::pair<unsigned int,bool> FifoToUser::write(const std::vector<unsigned char>&
 
 int FifoToUser::file_descriptor()
 {
-  return _fd;
+  return fd_;
 }
 
 
-bool FifoToUser::_sigpipe_off = false;
+bool FifoToUser::sigpipe_off_ = false;

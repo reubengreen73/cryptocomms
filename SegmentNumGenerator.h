@@ -22,11 +22,11 @@ public:
   void set_reserved(unsigned int reserved);
 
 private:
-  std::string _path;
-  std::mutex _lock;
-  unsigned int _reserved;
-  std::uint_least64_t _next_num;
-  std::uint_least64_t _new_reserve_needed;
+  std::string path_;
+  std::mutex lock_;
+  unsigned int reserved_;
+  std::uint_least64_t next_num_;
+  std::uint_least64_t new_reserve_needed_;
   void reserve_nums();
 };
 

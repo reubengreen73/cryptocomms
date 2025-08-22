@@ -36,14 +36,14 @@ public:
   void erase();
 
 private:
-  /* The "valid" private member allows the SecretKey to know if it contains
+  /* The valid_ private member allows the SecretKey to know if it contains
    * a valid key or not. A SecretKey is not valid, for example, after being
    * default-constructed or being moved from. It is very important that SecretKeys
    * are not used for encryption when they are in this state, as they contain a
    * key which may be all zeros or consist of values from uninitialized memory.
    */
-  bool valid;
-  unsigned char key[32];
+  bool valid_;
+  unsigned char key_[32];
 };
 
 #endif

@@ -13,11 +13,11 @@ namespace
 
 
 /* SecretKey::SecretKey() initializes a SecretKey into an invalid
- * state. Note that we do not need to initialize the key as the
+ * state. Note that we do not need to initialize key_ as the
  * SecretKey is marked as not valid.
  */
 SecretKey::SecretKey():
-  valid(false){}
+  valid_(false){}
 
 
 /* SecretKey::SecretKey(const std::string& str) constructs a SecretKey which
@@ -25,11 +25,11 @@ SecretKey::SecretKey():
  * str must consist of exactly 64 characters, all of which must be one of
  * 0123456789AaBbCcDdEeFf . Each pair of characters is interpreted as a single
  * byte, and thus the string as a whole is interpreted as a sequence of 32 bytes,
- * which is set as the value of this->key.
+ * which is set as the value of this->key_.
  *
  */
 SecretKey::SecretKey(const std::string& str):
-  valid(false)
+  valid_(false)
 {
   if(str.size() != 64){
     throw std::runtime_error("SecretKey: initialization string has wrong length");
@@ -39,16 +39,16 @@ SecretKey::SecretKey(const std::string& str):
     for(int i=0;i<32;i++){
       /* Note that the method used here avoids copying any character from str
        * to another location in memory, or putting any part of the key's value
-       * anywhere except in this->key. This restriction is why add_hex_to_int()
+       * anywhere except in this->key_. This restriction is why add_hex_to_int()
        * is implemented in the strange-seeming way that it is: both arguments
        * are taken by reference, and the value from the first argument is *added*
        * to the second argument (this also explains why we need our special
        * add_hex_to_int() function rather than just using eg std::stoi).
        */
-      key[i]=0;
-      add_hex_to_int(str[i*2],key[i]);
-      key[i] *= 16;
-      add_hex_to_int(str[(i*2)+1],key[i]);
+      key_[i]=0;
+      add_hex_to_int(str[i*2],key_[i]);
+      key_[i] *= 16;
+      add_hex_to_int(str[(i*2)+1],key_[i]);
     }
   }
   catch(std::invalid_argument& e){
@@ -58,7 +58,7 @@ SecretKey::SecretKey(const std::string& str):
     throw std::runtime_error("SecretKey: error initializing from hex string");
   }
 
-  valid = true;
+  valid_ = true;
 }
 
 
@@ -70,9 +70,9 @@ SecretKey& SecretKey::operator=(SecretKey&& other)
   }
 
   for(int i=0;i<32;i++){
-    key[i] = other.key[i];
+    key_[i] = other.key_[i];
   }
-  valid = other.valid;
+  valid_ = other.valid_;
   other.erase();
 
   return *this;
@@ -82,9 +82,9 @@ SecretKey& SecretKey::operator=(SecretKey&& other)
 SecretKey& SecretKey::operator=(const SecretKey& other)
 {
   for(int i=0;i<32;i++){
-    key[i] = other.key[i];
+    key_[i] = other.key_[i];
   }
- valid = other.valid;
+ valid_ = other.valid_;
 
   return *this;
 }
@@ -101,9 +101,9 @@ SecretKey::SecretKey(const SecretKey& other)
 void SecretKey::erase()
 {
   for(int i=0;i<32;i++){
-    key[i]=0;
+    key_[i]=0;
   }
-  valid = false;
+  valid_ = false;
 }
 
 
@@ -119,7 +119,7 @@ SecretKey::~SecretKey()
 unsigned char* SecretKey::data()
 {
   check_valid();
-  return key;
+  return key_;
 }
 
 
@@ -129,7 +129,7 @@ unsigned char* SecretKey::data()
 const unsigned char* SecretKey::data() const
 {
   check_valid();
-  return key;
+  return key_;
 }
 
 
@@ -139,12 +139,12 @@ unsigned char& SecretKey::operator[](unsigned int pos)
   if(pos > 31){
     throw std::runtime_error("SecretKey: index out of range");
   }
-  return key[pos];
+  return key_[pos];
 }
 
 
 /* Note that this operator[] returns by const reference, with a reference to
- * this->key. If the caller captures this reference, than all copying of the
+ * this->key_. If the caller captures this reference, than all copying of the
  * secret key is avoided.
  */
 const unsigned char&  SecretKey::operator[](unsigned int pos) const
@@ -153,14 +153,14 @@ const unsigned char&  SecretKey::operator[](unsigned int pos) const
   if(pos > 31){
     throw std::runtime_error("SecretKey: index out of range");
   }
-  return key[pos];
+  return key_[pos];
 }
 
 
 /* note that this validity checking is not thread-safe */
 void SecretKey::check_valid() const
 {
-  if(not valid){
+  if(not valid_){
     throw std::runtime_error("SecretKey: key used while invalid");
   }
 }

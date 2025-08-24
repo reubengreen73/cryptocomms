@@ -316,7 +316,9 @@ namespace
     std::vector<std::string>::iterator pos;
     ~ParseState();
 
-    /* we do not allow any copying or moving of a ParseState object */
+    /* we do not allow any copying or moving of a ParseState object, as its lines
+     * member will usually contain secret keys in hex format
+     */
     ParseState(const ParseState&) = delete;
     ParseState(ParseState&&) = delete;
     ParseState& operator=(const ParseState&) = delete;

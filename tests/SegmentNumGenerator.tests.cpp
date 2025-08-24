@@ -5,7 +5,6 @@
 #include <vector>
 #include <set>
 #include <fstream>
-#include <cstdio>
 #include <iostream>
 
 void stress_test_segnumgen_uniqueness_thread_func(std::vector<uint_least64_t>& segnums, SegmentNumGenerator& sng)

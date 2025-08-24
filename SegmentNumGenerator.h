@@ -21,6 +21,16 @@ public:
   std::uint_least64_t next_num();
   void set_reserved(unsigned int reserved);
 
+  /* We explicitly delete the copy and move assignment/constructors. It
+   * is vital for cryptographic security that segment numbers are never
+   * reused, and banning copying/moving of a SegmentNumGenerator helps
+   * protect against this.
+   */
+  SegmentNumGenerator(SegmentNumGenerator&& other) = delete;
+  SegmentNumGenerator& operator=(SegmentNumGenerator&& other) = delete;
+  SegmentNumGenerator(const SegmentNumGenerator& other) = delete;
+  SegmentNumGenerator& operator=(const SegmentNumGenerator& other) = delete;
+
 private:
   std::string path_;
   std::mutex lock_;

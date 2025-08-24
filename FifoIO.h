@@ -17,9 +17,14 @@ public:
   FifoFromUser(const std::string& path);
   FifoFromUser(FifoFromUser&& other);
   FifoFromUser& operator=(FifoFromUser&& other);
+  ~FifoFromUser();
+
+  /* We do not allow copying of a FifoFromUser, as the
+   * file descriptor fd_ is not shareable, and moreover
+   * there is no valid reason to copy a FifoFromuser.
+   */
   FifoFromUser(const FifoFromUser& other) = delete;
   FifoFromUser& operator=(const FifoFromUser& other) = delete;
-  ~FifoFromUser();
 
   std::vector<unsigned char> read(unsigned int count);
   int file_descriptor();
@@ -37,9 +42,14 @@ public:
   FifoToUser(const std::string& path);
   FifoToUser(FifoToUser&& other);
   FifoToUser& operator=(FifoToUser&& other);
+  ~FifoToUser();
+
+  /* We do not allow copying of a FifoFromUser, as the
+   * file descriptor fd_ is not shareable, and moreover
+   * there is no valid reason to copy a FifoFromuser.
+   */
   FifoToUser(const FifoToUser& other) = delete;
   FifoToUser& operator=(const FifoToUser& other) = delete;
-  ~FifoToUser();
 
   std::pair<unsigned int,bool> write(const std::vector<unsigned char>& data);
   int file_descriptor();

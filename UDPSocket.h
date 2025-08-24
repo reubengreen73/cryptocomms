@@ -31,16 +31,16 @@ public:
   const std::string& bound_addr();
   in_port_t bound_port();
 
+  UDPSocket (UDPSocket&&);
+  UDPSocket& operator= (UDPSocket&&);
+  ~UDPSocket();
+
   /* We do not allow copying, as the socket_fd member is not shareable (due to the use of the MSG_PEEK
    * method in UDPSocket::receive()), and moreover there is no reason to have two UDPSockets sharing a
    * socket_fd. We only allow moves.
    */
   UDPSocket (const UDPSocket&) = delete;
   UDPSocket& operator= (const UDPSocket&) = delete;
-  UDPSocket (UDPSocket&&);
-  UDPSocket& operator= (UDPSocket&&);
-
-  ~UDPSocket();
 
 private:
   int socket_fd_;

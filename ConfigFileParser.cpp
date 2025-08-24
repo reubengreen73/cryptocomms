@@ -109,8 +109,7 @@ namespace
     }
 
     if( (str_int < least) or (str_int > greatest) ){
-      throw ConfigLineError(
-			    "number out of range, allowed range is ("
+      throw ConfigLineError("number out of range, allowed range is ("
 			    +std::to_string(least)+","+std::to_string(greatest)+")");
     }
 
@@ -524,8 +523,7 @@ namespace
     for(auto& x : channel_ids){
       if(channel_ids.count(x) > 1){
 	throw std::runtime_error("ConfigFileParser: duplicated channel id for \""
-				 +peer_config.name+"\"\n  "
-				 );
+				 +peer_config.name+"\"\n  ");
       }
     }
 
@@ -538,8 +536,7 @@ namespace
     for(auto& x : channel_paths){
       if(channel_paths.count(x) > 1){
 	throw std::runtime_error("ConfigFileParser: duplicated channel path for \""
-				 +peer_config.name+"\"\n  "
-				 );
+				 +peer_config.name+"\"\n  ");
       }
     }
 

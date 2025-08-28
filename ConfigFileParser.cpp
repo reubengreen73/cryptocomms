@@ -129,14 +129,15 @@ namespace
   }
 
 
-  /* parse_id() parses a host id. Host ids are 4 byte integers, which are
-   * represented in a config file as a string of 8 hexadecimal digits
+  /* parse_id() parses a host id. Host ids are integers of host_id_size bytes,
+   * which are represented in a config file as a string of 2*host_id_size
+   * hexadecimal digits
    */
-  std::array<unsigned char,4> parse_id(const std::string& value_string)
+  host_id_type parse_id(const std::string& value_string)
   {
-    std::array<unsigned char,4> id;
+    host_id_type id;
     try{
-      id = parse_hex_string<4>(value_string);
+      id = parse_hex_string<host_id_size>(value_string);
     }
     catch(ConfigLineError& e){
       throw ConfigLineError(std::string("error parsing id, ")+e.what());
@@ -147,12 +148,13 @@ namespace
 
 
   /* parse_channel() parses a channel description. A channel description consists
-   * of a two byte channel id and a filesystem path (representing the location of the
+   * of a channel_id_type and a filesystem path (representing the location of the
    * endpoint of this channel on the local machine). In the config file, a channel
-   * description is represented as a string of four hex digits, followed by some
-   * whitespace, followed by the filesystem path (which may itself contain whitespace).
-   * Including the "channel: " prefix, this means that a channel description line might
-   * look like this
+   * description is represented as a string of hex digits for the channel_id_type,
+   * followed by some whitespace, followed by the filesystem path (which may itself
+   * contain whitespace). Including the "channel: " prefix, this means that a
+   * channel description line might look like this (with channel_id_type being a
+   * 2 byte inteter)
    * channel: 01a4 /root/dir1/dir2/blah
    * Note that ConfigFileParser does not do any validation of the filesystem path, and will
    * thus accept any string which begins with a non-whitespace character
@@ -178,7 +180,7 @@ namespace
 
     channel_spec channel;
     try{
-      channel = channel_spec{parse_hex_string<2>(channel_id),channel_path};
+      channel = channel_spec{parse_hex_string<channel_id_size>(channel_id),channel_path};
     }
     catch(ConfigLineError& e){
       throw ConfigLineError(std::string("error parsing channel id, ")+e.what());
@@ -517,7 +519,7 @@ namespace
     }
 
     /* check that no channel id has been repeated */
-    std::multiset<std::array<unsigned char,2>> channel_ids;
+    std::multiset<channel_id_type> channel_ids;
     std::transform(peer_config.channels.begin(), peer_config.channels.end(),
 		   std::inserter(channel_ids,channel_ids.end()),
 		   [](channel_spec& cs){return cs.first;}

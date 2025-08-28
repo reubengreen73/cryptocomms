@@ -1,4 +1,5 @@
 #include "testsys.h"
+#include "../IDTypes.h"
 #include "../SecretKey.h"
 #include "../PeerConfig.h"
 #include "../ConfigFileParser.h"
@@ -221,7 +222,7 @@ TESTFUNC(example_simple)
 {
   ConfigFileParser cfp(config_path+"config-example-simple");
 
-  TESTASSERT((cfp.id == std::array<unsigned char,4>{0x70,0xF0,0x3A,0x83}));
+  TESTASSERT((cfp.id == host_id_type{0x70,0xF0,0x3A,0x83}));
   TESTASSERT(cfp.ip_addr == "192.168.3.55");
   TESTASSERT(cfp.port == 1003);
   TESTASSERT(cfp.max_packet_size == -1);
@@ -230,7 +231,7 @@ TESTFUNC(example_simple)
 
   PeerConfig pc = cfp.peer_configs[0];
   TESTASSERT(pc.name == "other_host");
-  TESTASSERT((pc.id == std::array<unsigned char,4>{0x01,0xA7,0xB0,0xF9}));
+  TESTASSERT((pc.id == host_id_type{0x01,0xA7,0xB0,0xF9}));
   TESTASSERT(pc.port == 2301);
   TESTASSERT(pc.ip_addr == "192.168.17.19");
   TESTASSERT(pc.max_packet_size == 1000);
@@ -243,7 +244,7 @@ TESTFUNC(example_simple)
   TESTASSERT(pc.channels.size() == 1);
 
   channel_spec chan = pc.channels[0];
-  TESTASSERT((chan.first == std::array<unsigned char,2>{0x23,0xab}));
+  TESTASSERT((chan.first == channel_id_type{0x23,0xab}));
   TESTASSERT(chan.second == "/tmp/cryptocomms/sockets/other_host");
 }
 
@@ -282,7 +283,7 @@ TESTFUNC(example_multiple_other)
   }
 
   /* check other_host */
-  TESTASSERT((other_host.id == std::array<unsigned char,4>{0x01,0xA7,0xB0,0xF9}));
+  TESTASSERT((other_host.id == host_id_type{0x01,0xA7,0xB0,0xF9}));
   TESTASSERT(other_host.port == 2301);
   TESTASSERT(other_host.ip_addr == "192.168.17.19");
   TESTASSERT(other_host.max_packet_size == 1000);
@@ -295,11 +296,11 @@ TESTFUNC(example_multiple_other)
   TESTASSERT(another_host.channels.size() == 1);
 
   channel_spec oh_chan = other_host.channels[0];
-  TESTASSERT((oh_chan.first == std::array<unsigned char,2>{0x23,0xab}));
+  TESTASSERT((oh_chan.first == channel_id_type{0x23,0xab}));
   TESTASSERT(oh_chan.second == "/tmp/cryptocomms/sockets/other_host");
 
   /* check another_host */
-  TESTASSERT((another_host.id == std::array<unsigned char,4>{0x02,0x01,0x7A,0xC8}));
+  TESTASSERT((another_host.id == host_id_type{0x02,0x01,0x7A,0xC8}));
   TESTASSERT(another_host.port == 4414);
   TESTASSERT(another_host.ip_addr == "192.168.22.22");
   TESTASSERT(another_host.max_packet_size == 1500);
@@ -312,7 +313,7 @@ TESTFUNC(example_multiple_other)
   TESTASSERT(another_host.channels.size() == 1);
 
   channel_spec ah_chan = another_host.channels[0];
-  TESTASSERT((ah_chan.first == std::array<unsigned char,2>{0xA0,0x01}));
+  TESTASSERT((ah_chan.first == channel_id_type{0xA0,0x01}));
   TESTASSERT(ah_chan.second == "/tmp/cryptocomms/sockets/another_host");
 }
 

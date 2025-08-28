@@ -11,15 +11,16 @@
 #include <utility>
 #include <cstdint>
 
+#include "IDTypes.h"
 #include "SecretKey.h"
 
-typedef std::pair<std::array<unsigned char,2>,std::string> channel_spec;
+typedef std::pair<channel_id_type,std::string> channel_spec;
 
 class PeerConfig
 {
 public:
   std::string name;
-  std::array<unsigned char,4> id;
+  host_id_type id;
   SecretKey key;
   std::vector<channel_spec> channels;
   std::string ip_addr;

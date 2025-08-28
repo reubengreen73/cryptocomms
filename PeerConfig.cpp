@@ -9,10 +9,9 @@ void PeerConfig::clear()
   port = 0;
   max_packet_size = -1;
 
-  for(int i=0;i<4;i++){
+  for(int i=0; i<host_id_size; i++){
     id[i] = 0;
   }
 
   key.erase();
-
 }

@@ -10,6 +10,7 @@
 #include <array>
 #include <cstdint>
 
+#include "IDTypes.h"
 #include "PeerConfig.h"
 
 class ConfigFileParser
@@ -17,7 +18,7 @@ class ConfigFileParser
 public:
   ConfigFileParser(const std::string& path);
   std::vector<PeerConfig> peer_configs;
-  std::array<unsigned char,4> id;
+  host_id_type id;
   std::string ip_addr;
   std::uint16_t port;
   int max_packet_size; // a value of -1 here indicates no max packet size set

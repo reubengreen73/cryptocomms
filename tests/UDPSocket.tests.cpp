@@ -26,7 +26,7 @@ TESTFUNC(udpsocket_send_receive)
 
   TESTASSERT( sock1.send({1,2,3,4,5},"127.0.0.1",sock2_port) );
 
-  UDPMessage udp_msg = sock2.receive();
+  ReceivedUDPMessage udp_msg = sock2.receive();
   TESTASSERT( (udp_msg.data == std::vector<unsigned char>{1,2,3,4,5}) );
 }
 
@@ -40,7 +40,7 @@ TESTFUNC(udpsocket_receive_sender_details)
 
   sock1.send({1,2,3,4,5},"127.0.0.1",sock2_port);
 
-  UDPMessage udp_msg = sock2.receive();
+  ReceivedUDPMessage udp_msg = sock2.receive();
 
   TESTASSERT( udp_msg.source_port == sock1_port );
 
@@ -57,7 +57,7 @@ TESTFUNC(udpsocket_use_after_move)
   UDPSocket sock2(std::move(sock1));
 
   TESTTHROW( sock1.send({1,2,3,4,5},"127.0.0.1",5555), "send() after move" );
-  TESTTHROW( UDPMessage udp_msg = sock1.receive(), "receive() after move" );
+  TESTTHROW( ReceivedUDPMessage udp_msg = sock1.receive(), "receive() after move" );
 }
 
 

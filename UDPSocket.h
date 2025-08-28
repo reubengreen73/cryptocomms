@@ -14,20 +14,14 @@
 #include <string>
 #include <vector>
 
-struct UDPMessage
-{
-  bool valid;
-  std::vector<unsigned char> data;
-  std::string source_addr;
-  in_port_t source_port;
-};
+#include "ReceivedUDPMessage.h"
 
 class UDPSocket
 {
 public:
   UDPSocket(const std::string& ip_addr, in_port_t port);
   bool send(const std::vector<unsigned char>& msg, const std::string& dest_addr, in_port_t dest_port);
-  UDPMessage receive();
+  ReceivedUDPMessage receive();
   const std::string& bound_addr();
   in_port_t bound_port();
 

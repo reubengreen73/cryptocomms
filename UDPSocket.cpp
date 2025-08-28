@@ -135,17 +135,17 @@ bool UDPSocket::send(const std::vector<unsigned char>& msg, const std::string& d
 
 /* UDPSocket::receive() attempts to read a datagram from the socket, and return
  * it to the caller along with information about where it came from, all packaged
- * in to a UDPMessage struct.
+ * in to a ReceivedUDPMessage struct.
  *
  * UDPSocket::receive() communicates errors to the caller via the boolean "valid"
- * member of the returned UDPMessage struct (a "false" value indicates an error).
+ * member of the returned ReceivedUDPMessage struct (a "false" value indicates an error).
  *
  * Note that UDPSocket::receive() uses the recv_buff_ member to read data from the socket,
  * and uses the non-thread-safe function inet_ntoa(), and is thus not thread-safe.
  * However, there should not be any situation in which one UDPSocket is being used to
  * receive() by two different threads.
  */
-UDPMessage UDPSocket::receive()
+ReceivedUDPMessage UDPSocket::receive()
 {
   if(socket_fd_ == -1)
     throw std::runtime_error("UDPSocket: receive() after move");
@@ -155,7 +155,7 @@ UDPMessage UDPSocket::receive()
    * call to recvfrom() to actually read the datagram.
    */
 
-  UDPMessage invalid_msg = {false,{},"",0}; // this will be returned if an error occurs
+  ReceivedUDPMessage invalid_msg = {false,{},"",0}; // this will be returned if an error occurs
   ssize_t recvfrom_size;
   sockaddr_in source_addr_struct;
   socklen_t addr_len = sizeof(source_addr_struct);

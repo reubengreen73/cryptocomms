@@ -222,10 +222,10 @@ TESTFUNC(example_simple)
 {
   ConfigFileParser cfp(config_path+"config-example-simple");
 
-  TESTASSERT((cfp.id == host_id_type{0x70,0xF0,0x3A,0x83}));
-  TESTASSERT(cfp.ip_addr == "192.168.3.55");
-  TESTASSERT(cfp.port == 1003);
-  TESTASSERT(cfp.max_packet_size == -1);
+  TESTASSERT((cfp.self_id == host_id_type{0x70,0xF0,0x3A,0x83}));
+  TESTASSERT(cfp.self_ip_addr == "192.168.3.55");
+  TESTASSERT(cfp.self_port == 1003);
+  TESTASSERT(cfp.default_max_packet_size == -1);
 
   TESTASSERT(cfp.peer_configs.size() == 1);
 
@@ -346,9 +346,9 @@ TESTFUNC(multiple_channels)
 }
 
 
-/* check that configuring max_size for "self" works */
-TESTFUNC(max_size_for_self)
+/* check that configuring default maximum packet size works */
+TESTFUNC(default_max_packet_size)
 {
   ConfigFileParser cfp(config_path+"config-example-self-max-size");
-  TESTASSERT(cfp.max_packet_size == 1234);
+  TESTASSERT(cfp.default_max_packet_size == 1234);
 }

@@ -567,13 +567,13 @@ ConfigFileParser::ConfigFileParser(const std::string& path)
     config_names_seen.insert(peer_config.name);
 
     if(peer_config.name == self_name){
-      id = peer_config.id;
-      ip_addr = peer_config.ip_addr;
-      port = peer_config.port;
+      self_id = peer_config.id;
+      self_ip_addr = peer_config.ip_addr;
+      self_port = peer_config.port;
       /* note that parse_peer_config sets peer_config.max_packet_size to -1 (via PeerConfig.clear() )
        * if no maximum packet size is given in the config file
        */
-      max_packet_size = peer_config.max_packet_size;
+      default_max_packet_size = peer_config.max_packet_size;
     }
     else{
       peer_configs.push_back(peer_config);

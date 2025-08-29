@@ -21,22 +21,22 @@ SecretKey::SecretKey():
 
 
 /* SecretKey::SecretKey(const std::string& str) constructs a SecretKey which
- * holds the 32-byte key specified in hexadecimal by the string str.
- * str must consist of exactly 64 characters, all of which must be one of
+ * holds the key specified in hexadecimal by the string str. str must consist
+ * of exactly 2*secret_key_size characters, all of which must be one of
  * 0123456789AaBbCcDdEeFf . Each pair of characters is interpreted as a single
- * byte, and thus the string as a whole is interpreted as a sequence of 32 bytes,
- * which is set as the value of this->key_.
+ * byte, and thus the string as a whole is interpreted as a sequence of
+ * secret_key_size bytes, which is set as the value of this->key_.
  *
  */
 SecretKey::SecretKey(const std::string& str):
   valid_(false)
 {
-  if(str.size() != 64){
+  if(str.size() != 2*secret_key_size){
     throw std::runtime_error("SecretKey: initialization string has wrong length");
   }
 
   try{
-    for(int i=0;i<32;i++){
+    for(unsigned int i=0;i<secret_key_size;i++){
       /* Note that the method used here avoids copying any character from str
        * to another location in memory, or putting any part of the key's value
        * anywhere except in this->key_. This restriction is why add_hex_to_int()
@@ -69,7 +69,7 @@ SecretKey& SecretKey::operator=(SecretKey&& other)
     return *this;
   }
 
-  for(int i=0;i<32;i++){
+  for(unsigned int i=0;i<secret_key_size;i++){
     key_[i] = other.key_[i];
   }
   valid_ = other.valid_;
@@ -81,7 +81,7 @@ SecretKey& SecretKey::operator=(SecretKey&& other)
 
 SecretKey& SecretKey::operator=(const SecretKey& other)
 {
-  for(int i=0;i<32;i++){
+  for(unsigned int i=0;i<secret_key_size;i++){
     key_[i] = other.key_[i];
   }
  valid_ = other.valid_;
@@ -100,7 +100,7 @@ SecretKey::SecretKey(const SecretKey& other)
 
 void SecretKey::erase()
 {
-  for(int i=0;i<32;i++){
+  for(unsigned int i=0;i<secret_key_size;i++){
     key_[i]=0;
   }
   valid_ = false;
@@ -136,7 +136,7 @@ const unsigned char* SecretKey::data() const
 unsigned char& SecretKey::operator[](unsigned int pos)
 {
   check_valid();
-  if(pos > 31){
+  if(pos > (secret_key_size-1)){
     throw std::runtime_error("SecretKey: index out of range");
   }
   return key_[pos];
@@ -150,7 +150,7 @@ unsigned char& SecretKey::operator[](unsigned int pos)
 const unsigned char&  SecretKey::operator[](unsigned int pos) const
 {
   check_valid();
-  if(pos > 31){
+  if(pos > (secret_key_size-1)){
     throw std::runtime_error("SecretKey: index out of range");
   }
   return key_[pos];

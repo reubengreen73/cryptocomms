@@ -11,7 +11,7 @@ TESTFUNC(construct_from_hex_str)
 
   /* check that the correct key was generated */
   bool keys_match = true;
-  for(int i=0;i<32;i++){
+  for(unsigned int i=0;i<secret_key_size;i++){
     unsigned char byte_val = std::stoi(hex_str.substr(i*2,2),nullptr,16);
     keys_match = keys_match && (byte_val == sk[i]);
   }

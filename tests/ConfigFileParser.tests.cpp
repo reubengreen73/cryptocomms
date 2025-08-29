@@ -237,7 +237,7 @@ TESTFUNC(example_simple)
   TESTASSERT(pc.max_packet_size == 1000);
 
   SecretKey sk = SecretKey("0123456789abcdefABCDEF023FaF0f9D098a701246a763a54b537DD75C656018");
-  for(int i=0; i<32; i++){
+  for(unsigned int i=0; i<secret_key_size; i++){
     TESTASSERT(sk[i] == pc.key[i]);
   }
 
@@ -289,7 +289,7 @@ TESTFUNC(example_multiple_other)
   TESTASSERT(other_host.max_packet_size == 1000);
 
   SecretKey oh_sk = SecretKey("0123456789abcdefABCDEF023FaF0f9D098a701246a763a54b537DD75C656018");
-  for(int i=0; i<32; i++){
+  for(unsigned int i=0; i<secret_key_size; i++){
     TESTASSERT(oh_sk[i] == other_host.key[i]);
   }
 
@@ -306,7 +306,7 @@ TESTFUNC(example_multiple_other)
   TESTASSERT(another_host.max_packet_size == 1500);
 
   SecretKey ah_sk = SecretKey("a0123bf0FEDCBA0927456381fedcba871afb8610b6d5a484c29f0000f902634d");
-  for(int i=0; i<32; i++){
+  for(unsigned int i=0; i<secret_key_size; i++){
     TESTASSERT(ah_sk[i] == another_host.key[i]);
   }
 

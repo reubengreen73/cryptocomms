@@ -13,6 +13,8 @@
 
 #include <string>
 
+constexpr unsigned int secret_key_size = 32;
+
 class SecretKey
 {
 public:
@@ -43,7 +45,7 @@ private:
    * key which may be all zeros or consist of values from uninitialized memory.
    */
   bool valid_;
-  unsigned char key_[32];
+  unsigned char key_[secret_key_size];
 };
 
 #endif

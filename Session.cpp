@@ -70,6 +70,15 @@ void Session::start()
 void Session::stop()
 {
   stopping_ = true;
+
+  /* The socket thread blocks in receive calls on the socket, so we send
+   * some empty packets to allow it to wake up and see that stopping_ is
+   * true. This is a hack, but the code here is temporary.
+   */
+  for(int i=0; i<10; i++){
+    udp_socket_->send({},udp_socket_->bound_addr(),udp_socket_->bound_port());
+  }
+
   connections_thread.join();
   socket_thread.join();
   return;
@@ -134,6 +143,9 @@ void Session::socket_thread_func()
      * this identifier, we pass it to the correct Connection's incoming message queue.
      */
     connection_id_type msg_prefix;
+    if(msg.data.size() < msg_prefix.size()){
+      continue;
+    }
     std::copy(msg.data.begin(),msg.data.begin()+msg_prefix.size(),msg_prefix.begin());
     std::unique_ptr<Connection>& conn = connections_.at(msg_prefix);
     conn->add_message(msg);

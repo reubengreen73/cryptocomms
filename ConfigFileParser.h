@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <cstdint>
+#include <netinet/in.h> // for in_port_t
 
 #include "IDTypes.h"
 #include "PeerConfig.h"
@@ -20,7 +20,7 @@ public:
   std::vector<PeerConfig> peer_configs;
   host_id_type self_id;
   std::string self_ip_addr;
-  std::uint16_t self_port;
+  in_port_t self_port;
   int default_max_packet_size; // a value of -1 here indicates no default max packet size set
 };
 

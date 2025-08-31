@@ -13,7 +13,7 @@ Connection::Connection(const host_id_type& self_id,
 		       const std::string& fifo_base_path,
 		       const SecretKey& key,
 		       const std::string& peer_ip_addr,
-		       std::uint16_t peer_port,
+		       in_port_t peer_port,
 		       unsigned int max_packet_size,
 		       const std::shared_ptr<UDPSocket>& udp_socket,
 		       const std::shared_ptr<SegmentNumGenerator>& segnumgen):

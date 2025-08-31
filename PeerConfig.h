@@ -9,7 +9,7 @@
 #include <array>
 #include <vector>
 #include <utility>
-#include <cstdint>
+#include <netinet/in.h> // for in_port_t
 
 #include "IDTypes.h"
 #include "SecretKey.h"
@@ -24,7 +24,7 @@ public:
   SecretKey key;
   std::vector<channel_spec> channels;
   std::string ip_addr;
-  std::uint16_t port;
+  in_port_t port;
   int max_packet_size; // a value of -1 here indicates no max packet size set
   void clear();
 };

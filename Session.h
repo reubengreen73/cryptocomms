@@ -12,12 +12,12 @@
 
 #include <string>
 #include <array>
-#include <cstdint>
 #include <mutex>
 #include <memory>
 #include <thread>
 #include <atomic>
 #include <map>
+#include <netinet/in.h> // for in_port_t
 
 #include "IDTypes.h"
 #include "Connection.h"
@@ -29,7 +29,7 @@ class Session{
 public:
   Session(const host_id_type& self_id,
 	  const std::string& self_ip_addr,
-	  std::uint16_t self_port,
+	  in_port_t self_port,
 	  unsigned int default_max_packet_size,
 	  const std::vector<PeerConfig>& peer_configs,
 	  const std::string& segnum_file_path);

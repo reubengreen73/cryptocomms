@@ -15,10 +15,10 @@
 #include <deque>
 #include <mutex>
 #include <memory>
-#include <cstdint>
 #include <string>
 #include <utility>
 #include <array>
+#include <netinet/in.h> // for in_port_t
 
 #include "IDTypes.h"
 #include "UDPSocket.h"
@@ -36,7 +36,7 @@ public:
 	     const std::string& fifo_base_path,
 	     const SecretKey& key,
 	     const std::string& peer_ip_addr,
-	     std::uint16_t peer_port,
+	     in_port_t peer_port,
 	     unsigned int max_packet_size,
 	     const std::shared_ptr<UDPSocket>& udp_socket,
 	     const std::shared_ptr<SegmentNumGenerator>& segnumgen);
@@ -50,7 +50,7 @@ private:
   host_id_type peer_id_;
   channel_id_type channel_id_;
   std::string peer_ip_addr_;
-  std::uint16_t peer_port_;
+  in_port_t peer_port_;
   unsigned int max_packet_size_;
   std::shared_ptr<UDPSocket> udp_socket_;
   std::shared_ptr<SegmentNumGenerator> segnumgen_;

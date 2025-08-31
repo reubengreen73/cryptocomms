@@ -12,13 +12,13 @@
  */
 Session::Session(const host_id_type& self_id,
 		 const std::string& self_ip_addr,
-		 std::uint16_t self_port,
+		 in_port_t self_port,
 		 unsigned int default_max_packet_size,
 		 const std::vector<PeerConfig>& peer_configs,
 		 const std::string& segnum_file_path):
   self_id_(self_id),
   default_max_packet_size_(default_max_packet_size),
-  udp_socket_(std::make_shared<UDPSocket>(self_ip_addr, static_cast<in_port_t>(self_port))),
+  udp_socket_(std::make_shared<UDPSocket>(self_ip_addr,self_port)),
   segnumgen_(std::make_shared<SegmentNumGenerator>(segnum_file_path,2*peer_configs.size()))
 {
   for(auto const& peer_config : peer_configs){ // for each remote peer...

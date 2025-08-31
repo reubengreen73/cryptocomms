@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string>
-#include <cstdint>
+#include <netinet/in.h> // for in_port_t
 
 /* this test creates two sessions and checks that they can communicate correctly */
 TESTFUNC(Session_two_sessions_communicating)
@@ -21,8 +21,8 @@ TESTFUNC(Session_two_sessions_communicating)
   std::string host_A_fifo_base_name("host_A_fifo");
   std::string host_B_fifo_base_name("host_B_fifo");
   std::string ip_addr("127.0.0.1");
-  std::uint16_t host_A_port = 12991;
-  std::uint16_t host_B_port = 12992;
+  in_port_t host_A_port = 12991;
+  in_port_t host_B_port = 12992;
   int max_packet_size = 1000;
   std::string segnum_file_name = "segnumfile";
   SecretKey key("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");

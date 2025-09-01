@@ -44,16 +44,7 @@ private:
   unsigned int default_max_packet_size_;
   std::shared_ptr<UDPSocket> udp_socket_;
   std::shared_ptr<SegmentNumGenerator> segnumgen_;
-  std::atomic_bool stopping_; // this bool is used as a shutdown signal for all threads
 
-  /* this "stub" implementation of Session only uses two threads, one to handle
-   * incoming datagrams on the upd socket, and one to run the data moving function
-   * of all of the Connections
-   */
-  std::thread connections_thread;
-  std::thread socket_thread;
-  void connections_thread_func();
-  void socket_thread_func();
 };
 
 #endif

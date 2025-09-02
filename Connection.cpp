@@ -110,3 +110,10 @@ void Connection::add_message(ReceivedUDPMessage&& msg)
   const std::lock_guard<std::mutex> queue_lock_guard(queue_lock_);
   message_queue_.push_back(std::move(msg));
 }
+
+
+/* Connection::from_user_fifo_fd() returns the file descriptor for the
+ * Connection's FromUserFifo
+ */
+int Connection::from_user_fifo_fd()
+{ return fifo_from_user_.file_descriptor(); }

@@ -43,6 +43,7 @@ public:
   bool move_data(unsigned int loop_max);
   void add_message(const ReceivedUDPMessage& msg);
   void add_message(ReceivedUDPMessage&& msg);
+  int from_user_fifo_fd();
 
 private:
   host_id_type self_id_;

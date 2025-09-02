@@ -31,6 +31,9 @@ public:
 
 private:
   int fd_;
+  int write_fd_; // see the comments before the definition of the
+                 // parameterized constructor for the reason for
+                 // write_fd_
   std::vector<unsigned char> read_buff_;
   const std::string path_;
 };

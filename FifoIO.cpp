@@ -82,8 +82,27 @@ namespace
 }
 
 
+/* FifoFromUser() opens two file descriptors. fd_ is the file descriptor which will
+ * actually be used to read from. write_fd_ is never used by the FifoFromUser itself,
+ * but is needed to allow fd_ to be monitored by poll() in the way we want.
+ *
+ * Suppose FifoFromUser did not keep write_fd_ open at all times. In this situation,
+ * whenever a user opened the fifo corresponding to fd_, wrote to it, and then closed it,
+ * the fifo would be in a "disconnected" state (until/unless it was opened for writing
+ * again). While the fifo is thus disconnected, any call to poll() with fd_ amongst the
+ * file descriptors to monitor would return immediately with a POLLHUP event for fd_,
+ * preventing us from using poll() to listen for incoming data. Keeping write_fd_
+ * open prevents this.
+ */
 FifoFromUser::FifoFromUser(const std::string& path):
-  fd_(open_fifo(path,FifoMode::read)), path_(path){}
+  path_(path)
+{
+  /* Note that we do not need to do any error handling with these file descriptors,
+     as open_fifo() always either returns a valid file descriptor or else throws an
+     error. */
+  fd_ = open_fifo(path,FifoMode::read);
+  write_fd_ = open_fifo(path,FifoMode::write);
+}
 
 
 FifoFromUser::FifoFromUser(FifoFromUser&& other)
@@ -95,6 +114,8 @@ FifoFromUser& FifoFromUser::operator=(FifoFromUser&& other)
   if(this != &other){
     fd_ = other.fd_;
     other.fd_ = -1;
+    write_fd_ = other.write_fd_;
+    other.write_fd_ = -1;
   }
   return *this;
 }
@@ -104,6 +125,9 @@ FifoFromUser::~FifoFromUser()
 {
   if(fd_ != -1){
     close(fd_);
+  }
+  if(write_fd_ != -1){
+    close(write_fd_);
   }
 }
 
@@ -166,7 +190,7 @@ int FifoFromUser::file_descriptor()
  * for reading.
  */
 FifoToUser::FifoToUser(const std::string& path):
-  fd_(-1), path_(path)
+  path_(path)
 {
   /* sigpipe_off_ is a static member of FifoToUser which is initialized to false */
   if(not sigpipe_off_){
@@ -174,6 +198,9 @@ FifoToUser::FifoToUser(const std::string& path):
     sigpipe_off_ = true;
   }
 
+  /* Note that we do not need to do any error handling with these file descriptors,
+     as open_fifo() always either returns a valid file descriptor or else throws an
+     error. */
   int fd = open_fifo(path,FifoMode::read);
   fd_ = open_fifo(path,FifoMode::write);
   close(fd);

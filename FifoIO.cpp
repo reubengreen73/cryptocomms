@@ -15,16 +15,24 @@
 
 namespace
 {
+  /* this enum is used as an argument to open_fifo() below */
+  enum class FifoMode{
+    read,
+    write
+  };
 
-  /* open_fifo_read() opens a fifo for non-blocking reading at the specified path,
-   * creating the fifo first if necessary. Careful checking is performed to ensure
-   * that the file descriptor returned really does represent a fifo. This function
-   * is used by the primary constructor of both FifoFromUser and FifoToUser.
+  /* open_fifo() opens a fifo for non-blocking reading or writing at the specified path,
+   * creating the fifo first if necessary. Whether the fifo is opened for reading or
+   * writing is controlled by the mode parameter.
    *
-   * The return value of open_fifo_read() is always a valid file descriptor on a fifo
-   * at path, opened with mode O_RDONLY|O_NONBLOCK .
+   * Careful checking is performed to ensure that the file descriptor returned really does
+   * represent a fifo. This function is used by the primary constructor of both FifoFromUser
+   * and FifoToUser.
+   *
+   * The return value of open_fifo() is always a valid file descriptor on a fifo at "path",
+   * opened with mode O_RDONLY|O_NONBLOCK for "read" and O_WRONLY|O_NONBLOCK for "write".
    */
-  int open_fifo_read(const std::string& path)
+  int open_fifo(const std::string& path, FifoMode mode)
   {
     /* Check if there is already a file at path. If so, check that it is a fifo.
      * If not, create a fifo there with suitable permissions.
@@ -47,10 +55,12 @@ namespace
       }
     }
 
-    /* open the file at path for non-blocking reading */
+    /* open the file at path for non-blocking reading or writing */
     int fd = -1;
+    int open_flags = (mode == FifoMode::read) ?
+      O_RDONLY|O_NONBLOCK : O_WRONLY|O_NONBLOCK;
     while(fd == -1){
-      fd = open(path.c_str(), O_RDONLY|O_NONBLOCK);
+      fd = open(path.c_str(), open_flags);
       if( (fd == -1) && (errno != EINTR) ){
 	throw std::runtime_error("could not open "+path);
       }
@@ -73,7 +83,7 @@ namespace
 
 
 FifoFromUser::FifoFromUser(const std::string& path):
-  fd_(open_fifo_read(path)), path_(path){}
+  fd_(open_fifo(path,FifoMode::read)), path_(path){}
 
 
 FifoFromUser::FifoFromUser(FifoFromUser&& other)
@@ -164,15 +174,8 @@ FifoToUser::FifoToUser(const std::string& path):
     sigpipe_off_ = true;
   }
 
-  int fd = open_fifo_read(path);
-
-  while(fd_ == -1){
-    fd_ = open(path.c_str(), O_WRONLY|O_NONBLOCK);
-    if( (fd_ == -1) && (errno != EINTR) ){
-      throw std::runtime_error("could not open "+path);
-    }
-  }
-
+  int fd = open_fifo(path,FifoMode::read);
+  fd_ = open_fifo(path,FifoMode::write);
   close(fd);
 }
 

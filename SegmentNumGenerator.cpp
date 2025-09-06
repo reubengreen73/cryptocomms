@@ -28,13 +28,13 @@ namespace
     std::ifstream segnum_file(path);
     if(!segnum_file){
       throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
-			       +path);
+                               +path);
     }
 
     std::string saved_segnum_string;
     if(!std::getline(segnum_file,saved_segnum_string)){
       throw std::runtime_error(std::string("SegmentNumGenerator: could not read stored segment number file: ")
-			       +path);
+                               +path);
     }
 
     unsigned long long int saved_segnum;
@@ -42,7 +42,7 @@ namespace
       saved_segnum = std::stoull(saved_segnum_string);
     } catch (const std::exception& ex) {
       throw std::runtime_error(std::string("SegmentNumGenerator: could not parse stored segment number in file: ")
-			       +path+std::string(" (exception was :")+ex.what()+std::string(")"));
+                               +path+std::string(" (exception was :")+ex.what()+std::string(")"));
     }
 
     /* The segment number stored in the file should either be a value stored by a previous
@@ -54,7 +54,7 @@ namespace
      */
     if( not(saved_segnum < segnum_max) ){
       throw std::runtime_error(std::string("SegmentNumGenerator: stored segment number in file: ")+path+
-			       std::string(" is too big"));
+                               std::string(" is too big"));
     }
 
     return saved_segnum;
@@ -100,8 +100,8 @@ namespace
     while(true){
       std::ofstream segnum_file(path,std::ios::trunc);
       if(!segnum_file){
-	throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
-				 +path);
+        throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
+                                 +path);
       }
 
       segnum_file << segnum_string;
@@ -113,7 +113,7 @@ namespace
        */
       reread_segnum = get_saved_segnum(path);
       if(reread_segnum == segnum)
-	break;
+        break;
 
       /* ... but if it does not work then we just sleep for 0.1 second and try again. This
        * is very crude but it's the only think I can think of other than just throwing an

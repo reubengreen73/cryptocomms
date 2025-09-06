@@ -30,16 +30,16 @@ class Connection
 {
 public:
   Connection(const host_id_type& self_id,
-	     const std::string& peer_name,
-	     const host_id_type& peer_id,
-	     const channel_id_type& channel_id,
-	     const std::string& fifo_base_path,
-	     const SecretKey& key,
-	     const std::string& peer_ip_addr,
-	     in_port_t peer_port,
-	     unsigned int max_packet_size,
-	     const std::shared_ptr<UDPSocket>& udp_socket,
-	     const std::shared_ptr<SegmentNumGenerator>& segnumgen);
+             const std::string& peer_name,
+             const host_id_type& peer_id,
+             const channel_id_type& channel_id,
+             const std::string& fifo_base_path,
+             const SecretKey& key,
+             const std::string& peer_ip_addr,
+             in_port_t peer_port,
+             unsigned int max_packet_size,
+             const std::shared_ptr<UDPSocket>& udp_socket,
+             const std::shared_ptr<SegmentNumGenerator>& segnumgen);
   bool move_data(unsigned int loop_max);
   void add_message(const ReceivedUDPMessage& msg);
   void add_message(ReceivedUDPMessage&& msg);

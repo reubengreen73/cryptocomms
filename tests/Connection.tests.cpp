@@ -77,16 +77,16 @@ TESTFUNC(Connection_move_data)
   std::shared_ptr<SegmentNumGenerator> segnumgen =
     std::make_shared<SegmentNumGenerator>("segnumfile",1);
   Connection conn(self_id,
-		  peer_name,
-		  peer_id,
-		  channel_id,
-		  fifo_base_path,
-		  key,
-		  peer_ip_addr,
-		  socket_fd_bound_port,
-		  max_packet_size,
-		  udp_socket,
-		  segnumgen);
+                  peer_name,
+                  peer_id,
+                  channel_id,
+                  fifo_base_path,
+                  key,
+                  peer_ip_addr,
+                  socket_fd_bound_port,
+                  max_packet_size,
+                  udp_socket,
+                  segnumgen);
 
   /* open the Connection's fifos
    * Note that the literal strings "_OUTWARD" and "_INWARD" need to be kept in sync
@@ -108,7 +108,7 @@ TESTFUNC(Connection_move_data)
 
   // put the message in the queue
   std::vector<unsigned char> msg_data{0x01,0x4a,0x72,0xb1,0x66,0x10,0xaa,0x11,
-				      0x01,0x00,0x1b,0x73,0x3c,0x20,0x4f,0xff};
+                                      0x01,0x00,0x1b,0x73,0x3c,0x20,0x4f,0xff};
   ReceivedUDPMessage msg{true,msg_data,"127.0.0.1",socket_fd_bound_port};
   conn.add_message(msg);
 
@@ -120,7 +120,7 @@ TESTFUNC(Connection_move_data)
   ssize_t ret = read(read_fifo_fd,buff.data(),10);
   TESTASSERT(ret == 10);
   TESTASSERT((buff == \
-	      std::array<unsigned char,10>{0xaa,0x11,0x01,0x00,0x1b,0x73,0x3c,0x20,0x4f,0xff}));
+              std::array<unsigned char,10>{0xaa,0x11,0x01,0x00,0x1b,0x73,0x3c,0x20,0x4f,0xff}));
 
   /* 3 -Test the functionality for moving data through the Connection from the fifo
    * to the udp socket.
@@ -142,8 +142,8 @@ TESTFUNC(Connection_move_data)
   socklen_t addr_len = sizeof(source_addr);
   ret = recvfrom(socket_fd,buff2.data(),16,0,(sockaddr*)&source_addr,&addr_len);
   TESTASSERT(ret == 16);
-  TESTASSERT((buff2 == std::array<unsigned char,16>			\
-	      {0x01,0x4a,0x72,0xb1,0x66,0x10,0xbb,0x12,0x01,0x00,0x07,0x75,0xaa,0xd2,0x5f,0x89}));
+  TESTASSERT((buff2 == std::array<unsigned char,16>                     \
+              {0x01,0x4a,0x72,0xb1,0x66,0x10,0xbb,0x12,0x01,0x00,0x07,0x75,0xaa,0xd2,0x5f,0x89}));
 
 
   close(read_fifo_fd);

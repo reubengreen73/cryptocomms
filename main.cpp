@@ -21,10 +21,10 @@ int main(int argc, char** argv){
   int default_max_packet_size = (cfp.default_max_packet_size == -1) ?
     1200 : cfp.default_max_packet_size;
   Session session(cfp.self_id,
-		  cfp.self_ip_addr,cfp.self_port,
-		  default_max_packet_size,
-		  cfp.peer_configs,
-		  argv[2]);
+                  cfp.self_ip_addr,cfp.self_port,
+                  default_max_packet_size,
+                  cfp.peer_configs,
+                  argv[2]);
 
   session.start();
 

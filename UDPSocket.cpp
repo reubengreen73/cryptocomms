@@ -118,7 +118,7 @@ bool UDPSocket::send(const std::vector<unsigned char>& msg, const std::string& d
   ssize_t sent_size;
   do{
     sent_size = sendto(socket_fd_,msg.data(),msg.size(),0,
-		       (sockaddr *)&dest_addr_struct, sizeof(dest_addr_struct));
+                       (sockaddr *)&dest_addr_struct, sizeof(dest_addr_struct));
   } while(sent_size == -1 && errno == EINTR);
 
   if(sent_size == -1){
@@ -172,7 +172,7 @@ ReceivedUDPMessage UDPSocket::receive()
     /* peek at the data, retrying if recvfrom() is interrupted */
     do{
       recvfrom_size = recvfrom(socket_fd_, recv_buff_.data(), recv_buff_.size(), MSG_PEEK,
-			       (sockaddr*)&source_addr_struct, &addr_len);
+                               (sockaddr*)&source_addr_struct, &addr_len);
     } while(recvfrom_size == -1 && errno == EINTR);
 
     /* we use "< 0" rather than " == -1" to be totally sure that the static_cast below
@@ -199,7 +199,7 @@ ReceivedUDPMessage UDPSocket::receive()
   do{
     addr_len = sizeof(source_addr_struct);
     recvfrom_size = recvfrom(socket_fd_, recv_buff_.data(), recv_buff_.size(), 0,
-			     (sockaddr*)&source_addr_struct, &addr_len);
+                             (sockaddr*)&source_addr_struct, &addr_len);
   } while(recvfrom_size == -1 && errno == EINTR);
 
   if(recvfrom_size == -1){

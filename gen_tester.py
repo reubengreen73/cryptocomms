@@ -36,7 +36,7 @@ test_source_template_string = """\
 typedef void (*testsys_function_t)();
 
 int testsys_deleter(const char* path, const struct stat* stat_info,
-	    int other_info, struct FTW* ftw_info)
+            int other_info, struct FTW* ftw_info)
 {
   int ret;
   if(other_info == FTW_DP)

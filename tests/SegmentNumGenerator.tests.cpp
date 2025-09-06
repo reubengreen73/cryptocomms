@@ -39,7 +39,7 @@ TESTFUNC(stress_test_segnumgen_uniqueness)
 
     for(int i = 0; i < num_threads; i++){
       threads.push_back(std::thread(stress_test_segnumgen_uniqueness_thread_func,
-				    std::ref(segnum_vectors[i]),std::ref(sng)));
+                                    std::ref(segnum_vectors[i]),std::ref(sng)));
     }
 
     for(int i = 0; i < num_threads; i++){

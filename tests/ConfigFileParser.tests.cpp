@@ -16,9 +16,9 @@ const std::string config_path = "../tests/configfileparser-tests/";
 TESTFUNC(hex_wrong_length)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-hex-wrong-length-1"),
-	    "string is the wrong length");
+            "string is the wrong length");
   TESTTHROW(ConfigFileParser(config_path+"config-error-hex-wrong-length-2"),
-	    "string is the wrong length");
+            "string is the wrong length");
 }
 
 
@@ -26,7 +26,7 @@ TESTFUNC(hex_wrong_length)
 TESTFUNC(hex_invalid_characters)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-hex-invalid-characters"),
-	    "invalid characters present");
+            "invalid characters present");
 }
 
 
@@ -34,7 +34,7 @@ TESTFUNC(hex_invalid_characters)
 TESTFUNC(int_invalid_number)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-int-invalid"),
-	    "invalid number");
+            "invalid number");
 }
 
 
@@ -42,7 +42,7 @@ TESTFUNC(int_invalid_number)
 TESTFUNC(int_out_of_range)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-int-out-of-range"),
-	    "number out of range, allowed range is");
+            "number out of range, allowed range is");
 }
 
 
@@ -50,7 +50,7 @@ TESTFUNC(int_out_of_range)
 TESTFUNC(name_invalid_characters)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-name-invalid-characters"),
-	    "invalid characters in name");
+            "invalid characters in name");
 }
 
 
@@ -60,7 +60,7 @@ TESTFUNC(name_invalid_characters)
 TESTFUNC(channel_no_whitespace)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-channel-no-whitespace"),
-	    "no whitespace in channel specifier");
+            "no whitespace in channel specifier");
 }
 
 
@@ -68,7 +68,7 @@ TESTFUNC(channel_no_whitespace)
 TESTFUNC(ip_illegal_character)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-illegal-character"),
-	    "illegal character in ip address");
+            "illegal character in ip address");
 }
 
 
@@ -78,10 +78,10 @@ TESTFUNC(ip_illegal_character)
 TESTFUNC(ip_dots_wrong)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-dots-1"),
-	    "malformed ip address");
+            "malformed ip address");
 
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-dots-2"),
-	    "malformed ip address");
+            "malformed ip address");
 }
 
 
@@ -95,14 +95,14 @@ TESTFUNC(ip_segment_size)
    * fourth segments
    */
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-segment-size-1"),
-	    "malformed ip address");
+            "malformed ip address");
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-segment-size-2"),
-	    "malformed ip address");
+            "malformed ip address");
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-segment-size-3"),
-	    "malformed ip address");
+            "malformed ip address");
 
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-segment-size-4"),
-	    "malformed ip address");
+            "malformed ip address");
 }
 
 
@@ -112,7 +112,7 @@ TESTFUNC(ip_segment_size)
 TESTFUNC(ip_segment_too_big)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-segment-too-big"),
-	    "invalid ip address");
+            "invalid ip address");
 }
 
 
@@ -120,7 +120,7 @@ TESTFUNC(ip_segment_too_big)
 TESTFUNC(split_line_no_colon)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-split-line-no-colon"),
-	    "no ':' in line");
+            "no ':' in line");
 }
 
 
@@ -128,7 +128,7 @@ TESTFUNC(split_line_no_colon)
 TESTFUNC(split_line_no_option_field)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-split-line-no-option-field"),
-	    "empty option field");
+            "empty option field");
 }
 
 
@@ -136,7 +136,7 @@ TESTFUNC(split_line_no_option_field)
 TESTFUNC(key_for_self)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-key-for-self"),
-	    "\"key\" not allowed");
+            "\"key\" not allowed");
 }
 
 
@@ -144,7 +144,7 @@ TESTFUNC(key_for_self)
 TESTFUNC(channel_for_self)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-channel-for-self"),
-	    "\"channel\" not allowed");
+            "\"channel\" not allowed");
 }
 
 
@@ -152,7 +152,7 @@ TESTFUNC(channel_for_self)
 TESTFUNC(invalid_option)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-invalid-option"),
-	    "invalid option name");
+            "invalid option name");
 }
 
 
@@ -160,7 +160,7 @@ TESTFUNC(invalid_option)
 TESTFUNC(missing_option)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-missing-option"),
-	    "missing options for");
+            "missing options for");
 }
 
 
@@ -168,7 +168,7 @@ TESTFUNC(missing_option)
 TESTFUNC(missing_self_config)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-missing-self"),
-	    "missing configuration for self");
+            "missing configuration for self");
 }
 
 
@@ -176,7 +176,7 @@ TESTFUNC(missing_self_config)
 TESTFUNC(repeated_config)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-repeated-config"),
-	    "multiple configurations for \"other_host\"");
+            "multiple configurations for \"other_host\"");
 }
 
 
@@ -184,7 +184,7 @@ TESTFUNC(repeated_config)
 TESTFUNC(missing_config_file)
 {
   TESTTHROW(ConfigFileParser(config_path+"non-existent-config-file"),
-	    "could not open config file");
+            "could not open config file");
 }
 
 
@@ -194,7 +194,7 @@ TESTFUNC(missing_config_file)
 TESTFUNC(name_not_first)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-name-not-first"),
-	    "expected option \"name\"");
+            "expected option \"name\"");
 }
 
 
@@ -202,7 +202,7 @@ TESTFUNC(name_not_first)
 TESTFUNC(repeated_error)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-repeated-option"),
-	    "configuration option \"id\" repeated");
+            "configuration option \"id\" repeated");
 }
 
 
@@ -210,10 +210,10 @@ TESTFUNC(repeated_error)
 TESTFUNC(repeated_channel_path_id_error)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-repeated-channel-id"),
-	    " duplicated channel id");
+            " duplicated channel id");
 
   TESTTHROW(ConfigFileParser(config_path+"config-error-repeated-channel-path"),
-	    " duplicated channel path");
+            " duplicated channel path");
 }
 
 
@@ -334,7 +334,7 @@ TESTFUNC(multiple_channels)
     TESTASSERT(cfp.peer_configs.size() == 1);
 
     std::set<channel_spec> channels(cfp.peer_configs[0].channels.begin(),
-				    cfp.peer_configs[0].channels.end());
+                                    cfp.peer_configs[0].channels.end());
     TESTASSERT(channels.size() == 3);
     std::set<channel_spec> expected_channels{
       channel_spec({0x23,0xab},"/tmp/cryptocomms/sockets/other_host_one"),

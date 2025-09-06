@@ -28,11 +28,11 @@
 class Session{
 public:
   Session(const host_id_type& self_id,
-	  const std::string& self_ip_addr,
-	  in_port_t self_port,
-	  unsigned int default_max_packet_size,
-	  const std::vector<PeerConfig>& peer_configs,
-	  const std::string& segnum_file_path);
+          const std::string& self_ip_addr,
+          in_port_t self_port,
+          unsigned int default_max_packet_size,
+          const std::vector<PeerConfig>& peer_configs,
+          const std::string& segnum_file_path);
   void start();
   void stop();
 

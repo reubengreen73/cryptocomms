@@ -42,7 +42,7 @@ namespace
     if( (res == -1) && (errno == ENOENT) ){
       /* no file at path, so create a fifo */
       if(mkfifo(path.c_str(), S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH) == -1){
-	throw std::runtime_error("could not create FIFO at "+path);
+        throw std::runtime_error("could not create FIFO at "+path);
       }
     }
     else if(res == -1){
@@ -51,7 +51,7 @@ namespace
     else{
       /* there is a file at path, so check that it is a fifo */
       if( (stat_info.st_mode & S_IFIFO) == 0 ){
-	throw std::runtime_error(path+" is not a FIFO");
+        throw std::runtime_error(path+" is not a FIFO");
       }
     }
 
@@ -62,7 +62,7 @@ namespace
     while(fd == -1){
       fd = open(path.c_str(), open_flags);
       if( (fd == -1) && (errno != EINTR) ){
-	throw std::runtime_error("could not open "+path);
+        throw std::runtime_error("could not open "+path);
       }
     }
 
@@ -157,10 +157,10 @@ std::vector<unsigned char> FifoFromUser::read(unsigned int count)
     ret = ::read(fd_,read_buff_.data()+total_read,count-total_read);
     if(ret == -1){
       if(errno == EINTR){
-	continue;
+        continue;
       }
       if(errno == EAGAIN){ // the read would block if fd_ were not O_NONBLOCK
-	break;
+        break;
       }
       throw FifoIOError("error reading from fifo "+path_);
     }
@@ -254,15 +254,15 @@ std::pair<unsigned int,bool> FifoToUser::write(const std::vector<unsigned char>&
     ret = ::write(fd_,data.data()+total_written,data.size()-total_written);
     if(ret == -1){
       if(errno == EINTR){
-	continue;
+        continue;
       }
       if(errno == EPIPE){
-	// EPIPE indicates a "broken pipe", i.e. the fifo is not open for reading
-	return {total_written,true};
+        // EPIPE indicates a "broken pipe", i.e. the fifo is not open for reading
+        return {total_written,true};
       }
       if(errno == EAGAIN){
-	// EAGAIN means the pipe is full
-	break;
+        // EAGAIN means the pipe is full
+        break;
       }
       throw FifoIOError("error writing to fifo "+path_);
     }

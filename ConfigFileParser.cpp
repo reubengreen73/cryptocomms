@@ -110,7 +110,7 @@ namespace
 
     if( (str_int < least) or (str_int > greatest) ){
       throw ConfigLineError("number out of range, allowed range is ("
-			    +std::to_string(least)+","+std::to_string(greatest)+")");
+                            +std::to_string(least)+","+std::to_string(greatest)+")");
     }
 
     return str_int;
@@ -216,23 +216,23 @@ namespace
       std::string chunk(it,next_period);
 
       if( (chunk.size() < 1) or (chunk.size() > 3) ){
-	throw ConfigLineError("malformed ip address");
+        throw ConfigLineError("malformed ip address");
       }
 
       int byte_value = std::stoi(chunk);
       if(byte_value > 255){
-	throw ConfigLineError("invalid ip address");
+        throw ConfigLineError("invalid ip address");
       }
 
       if(next_period == value_string.end()){
-	it = value_string.end();
+        it = value_string.end();
       }
       else{
-	it = next_period + 1;
-	if(it == value_string.end()){
-	  // the last character of value_string is a '.', error
-	  throw ConfigLineError("malformed ip address");
-	}
+        it = next_period + 1;
+        if(it == value_string.end()){
+          // the last character of value_string is a '.', error
+          throw ConfigLineError("malformed ip address");
+        }
       }
 
     }
@@ -365,13 +365,13 @@ namespace
    * missing from seen_opts.
    */
   std::set<std::string> check_required_options(const std::set<std::string>& required_opts,
-					       const std::set<std::string>& seen_opts)
+                                               const std::set<std::string>& seen_opts)
   {
     std::set<std::string> missing_opts;
     std::copy_if(required_opts.begin(),required_opts.end(),
-		 std::inserter(missing_opts,missing_opts.begin()),
-		 [&](const std::string& s){ return seen_opts.count(s) == 0; }
-		 );
+                 std::inserter(missing_opts,missing_opts.begin()),
+                 [&](const std::string& s){ return seen_opts.count(s) == 0; }
+                 );
     return missing_opts;
   }
 
@@ -425,7 +425,7 @@ namespace
        */
       auto content_begin = std::find_if(line.begin(),line.end(),not_isspace);
       if((content_begin == line.end()) or (*content_begin == '#')){
-	continue;
+        continue;
       }
 
       /* split the line into an option name and an option value*/
@@ -438,63 +438,63 @@ namespace
        * this is the start of the next configuration block, so we are done
        */
       if( (option_name == "name") and (option_names_seen.count(option_name) != 0) ){
-	parse_state.pos--;
-	break;
+        parse_state.pos--;
+        break;
       }
 
       auto line_num = std::distance(parse_state.lines.begin(),parse_state.pos);
 
       /* ensure that the first line in any configuration block is a "name" line  */
       if( (option_name != "name") and (option_names_seen.count("name") == 0) ){
-	config_line_error("expected option \"name\"",line_num);
+        config_line_error("expected option \"name\"",line_num);
       }
 
       /* forbid multiple occurrences of any option except "channel" */
       if( (option_names_seen.count(option_name) != 0) and (option_name != "channel") ){
-	config_line_error("configuration option \""+option_name+"\" repeated",line_num);
+        config_line_error("configuration option \""+option_name+"\" repeated",line_num);
       }
 
       try{
-	/* The extended if-else below functions as a switch statement on the string
-	 * option_name. The functions called below can throw ConfigLineError, which
-	 * represents an error arising from an incorrect configuration line. The enclosing
-	 * try-catch block catches these errors and uses config_line_error to propagate
-	 * this error with the line number attached.
-	 */
+        /* The extended if-else below functions as a switch statement on the string
+         * option_name. The functions called below can throw ConfigLineError, which
+         * represents an error arising from an incorrect configuration line. The enclosing
+         * try-catch block catches these errors and uses config_line_error to propagate
+         * this error with the line number attached.
+         */
 
-	if(option_name == "name")
-	  peer_config.name = parse_name(option_value);
+        if(option_name == "name")
+          peer_config.name = parse_name(option_value);
 
-	else if(option_name == "id")
-	  peer_config.id = parse_id(option_value);
+        else if(option_name == "id")
+          peer_config.id = parse_id(option_value);
 
-	else if( (option_name == "key") and (peer_config.name != self_name) )
-	  peer_config.key = SecretKey(option_value);
+        else if( (option_name == "key") and (peer_config.name != self_name) )
+          peer_config.key = SecretKey(option_value);
 
-	else if( (option_name == "key") and (peer_config.name == self_name) )
-	  throw ConfigLineError("\"key\" not allowed for \""+self_name+"\"");
+        else if( (option_name == "key") and (peer_config.name == self_name) )
+          throw ConfigLineError("\"key\" not allowed for \""+self_name+"\"");
 
-	else if( (option_name == "channel") and (peer_config.name != self_name) )
-	  peer_config.channels.push_back(parse_channel(option_value));
+        else if( (option_name == "channel") and (peer_config.name != self_name) )
+          peer_config.channels.push_back(parse_channel(option_value));
 
-	else if( (option_name == "channel") and (peer_config.name == self_name) )
-	  throw ConfigLineError("\"channel\" not allowed for \""+self_name+"\"");
+        else if( (option_name == "channel") and (peer_config.name == self_name) )
+          throw ConfigLineError("\"channel\" not allowed for \""+self_name+"\"");
 
-	else if(option_name == "ip")
-	  peer_config.ip_addr = parse_ip(option_value);
+        else if(option_name == "ip")
+          peer_config.ip_addr = parse_ip(option_value);
 
-	else if(option_name == "port")
-	  peer_config.port = parse_port(option_value);
+        else if(option_name == "port")
+          peer_config.port = parse_port(option_value);
 
-	else if(option_name == "max_size")
-	  peer_config.max_packet_size = parse_max_size(option_value);
+        else if(option_name == "max_size")
+          peer_config.max_packet_size = parse_max_size(option_value);
 
-	else
-	  throw ConfigLineError("invalid option name \""+option_name+"\"");
+        else
+          throw ConfigLineError("invalid option name \""+option_name+"\"");
 
       }
       catch(ConfigLineError& e){
-	config_line_error(e.what(),line_num);
+        config_line_error(e.what(),line_num);
       }
 
 
@@ -508,39 +508,39 @@ namespace
     std::set<std::string> required_options = (peer_config.name == self_name) ?
       std::set<std::string>{"id","ip","port"} : std::set<std::string>{"id","ip","port","key"};
     std::set<std::string> missing_options = check_required_options(required_options,
-								   option_names_seen);
+                                                                   option_names_seen);
     if(missing_options != std::set<std::string>{}){
       std::string missing_options_string;
       for(auto s : missing_options){
-	missing_options_string += " "+s;
+        missing_options_string += " "+s;
       }
       throw std::runtime_error("ConfigFileParser: missing options for \""+peer_config.name+"\"\n  "+
-			       missing_options_string);
+                               missing_options_string);
     }
 
     /* check that no channel id has been repeated */
     std::multiset<channel_id_type> channel_ids;
     std::transform(peer_config.channels.begin(), peer_config.channels.end(),
-		   std::inserter(channel_ids,channel_ids.end()),
-		   [](channel_spec& cs){return cs.first;}
-		   );
+                   std::inserter(channel_ids,channel_ids.end()),
+                   [](channel_spec& cs){return cs.first;}
+                   );
     for(auto& x : channel_ids){
       if(channel_ids.count(x) > 1){
-	throw std::runtime_error("ConfigFileParser: duplicated channel id for \""
-				 +peer_config.name+"\"\n  ");
+        throw std::runtime_error("ConfigFileParser: duplicated channel id for \""
+                                 +peer_config.name+"\"\n  ");
       }
     }
 
     /* check that no channel path has been repeated */
     std::multiset<std::string> channel_paths;
     std::transform(peer_config.channels.begin(), peer_config.channels.end(),
-		   std::inserter(channel_paths,channel_paths.end()),
-		   [](channel_spec& cs){return cs.second;}
-		   );
+                   std::inserter(channel_paths,channel_paths.end()),
+                   [](channel_spec& cs){return cs.second;}
+                   );
     for(auto& x : channel_paths){
       if(channel_paths.count(x) > 1){
-	throw std::runtime_error("ConfigFileParser: duplicated channel path for \""
-				 +peer_config.name+"\"\n  ");
+        throw std::runtime_error("ConfigFileParser: duplicated channel path for \""
+                                 +peer_config.name+"\"\n  ");
       }
     }
 

@@ -222,3 +222,7 @@ const std::string& UDPSocket::bound_addr()
 
 in_port_t UDPSocket::bound_port()
 { return bound_port_; }
+
+
+int UDPSocket::file_descriptor()
+{return socket_fd_;}

@@ -24,6 +24,7 @@ public:
   ReceivedUDPMessage receive();
   const std::string& bound_addr();
   in_port_t bound_port();
+  int file_descriptor();
 
   UDPSocket (UDPSocket&&);
   UDPSocket& operator= (UDPSocket&&);

@@ -1,7 +1,9 @@
 #include "Connection.h"
 
+#include <poll.h>
 
-/* suffixes for the file names of the FIFOs where data goes in and out of the program */
+/* suffixes for the file names of the FIFOs where data goes in and out of the program
+   these should eventually become user-settable */
 constexpr char fifo_from_user_suffix[] = "_OUTWARD";
 constexpr char fifo_to_user_suffix[] = "_INWARD";
 
@@ -40,13 +42,9 @@ Connection::Connection(const host_id_type& self_id,
  * udp_socket_, and then attempt to pull one UDP message from message_queue_
  * and write its contents to fifo_to_user_. The loop runs for at most loop_max
  * passes, or until neither operation has any data to work with.
- *
- * If any data was moved, move_data() returns true, otherwise it returns false.
  */
-bool Connection::move_data(unsigned int loop_max)
+void Connection::move_data(unsigned int loop_max)
 {
-  bool no_data_at_all = true; // used to record if we moved any data at all
-                              // for the return value
   bool no_more_data = false; // used to record if a pass of the loop moved
                              // any data
   std::vector<unsigned char> fifo_data, msg_data;
@@ -60,7 +58,6 @@ bool Connection::move_data(unsigned int loop_max)
     fifo_data = fifo_from_user_.read(max_packet_size_-(host_id_size+channel_id_size));
     if(fifo_data.size() > 0){
       no_more_data = false;
-      no_data_at_all = false;
       msg_data = std::vector<unsigned char>(self_id_.begin(),self_id_.end());
       msg_data.insert(msg_data.end(),channel_id_.begin(),channel_id_.end());
       msg_data.insert(msg_data.end(),fifo_data.begin(),fifo_data.end());
@@ -68,8 +65,9 @@ bool Connection::move_data(unsigned int loop_max)
     }
 
     /* attempt to pull a udp message off message_queue_... */
-    ReceivedUDPMessage udp_message{false,{},"",0};
-    {
+    ReceivedUDPMessage udp_message{false,{},"",0}; // initialize udp_message to
+                                                   // an "invalid" state
+    {// new block to limit the scope of queue_lock_guard
       const std::lock_guard<std::mutex> queue_lock_guard(queue_lock_);
       if(!message_queue_.empty()){
         udp_message = message_queue_.front();
@@ -80,7 +78,6 @@ bool Connection::move_data(unsigned int loop_max)
     /* ...and if there was a message waiting, write its data to fifo_to_user_ */
     if(udp_message.valid){
       no_more_data = false;
-      no_data_at_all = false;
       auto it_begin = udp_message.data.begin()+(host_id_size+channel_id_size);
       auto it_end = udp_message.data.end();
       fifo_to_user_.write(std::vector<unsigned char>(it_begin,it_end));
@@ -88,7 +85,30 @@ bool Connection::move_data(unsigned int loop_max)
 
   }
 
-  return no_data_at_all;
+}
+
+
+/* Connection::is_data() tests whether there is currently any data to be processed
+ * for the Connection
+ */
+bool Connection::is_data()
+{
+  /* check if there are any messages in message_queue_ */
+  {// new block to limit the scope of queue_lock_guard
+    const std::lock_guard<std::mutex> queue_lock_guard(queue_lock_);
+    if(!message_queue_.empty()){
+      return true;}
+  }
+
+  /* check if there is any data to be read on fifo_from_user_ */
+  pollfd pfd;
+  pfd.fd = fifo_from_user_.file_descriptor();
+  pfd.events = POLLIN;
+  int ret = poll(&pfd,1,0); //0 means return immediately
+  if((ret == 1) && (pfd.revents & POLLIN)){
+    return true;}
+
+  return false;
 }
 
 

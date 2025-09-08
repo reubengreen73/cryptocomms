@@ -16,8 +16,6 @@
 #include <mutex>
 #include <memory>
 #include <string>
-#include <utility>
-#include <array>
 #include <netinet/in.h> // for in_port_t
 
 #include "IDTypes.h"
@@ -40,7 +38,8 @@ public:
              unsigned int max_packet_size,
              const std::shared_ptr<UDPSocket>& udp_socket,
              const std::shared_ptr<SegmentNumGenerator>& segnumgen);
-  bool move_data(unsigned int loop_max);
+  void move_data(unsigned int loop_max);
+  bool is_data();
   void add_message(const ReceivedUDPMessage& msg);
   void add_message(ReceivedUDPMessage&& msg);
   int from_user_fifo_fd();

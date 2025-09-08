@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <string>
 #include <array>
+#include <memory>
 
 #include <string.h>
 #include <arpa/inet.h>
@@ -21,20 +22,43 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-/* Test that moving data through a Connection works correctly. This test function is very
- * big, but that is mostly due to all the setup which is needed.
- */
-TESTFUNC(Connection_move_data)
+
+/* struct to hold what is returned by create_connection() */
+struct ConnectionAndFDs
 {
-  /* 1 - Perform setup for the tests
-   *
-   * The tests in this function need some pretty heavy setup - we need to create
-   * a socket, bind it, create a Connection, and open the Connection's fifos
-   */
+  std::unique_ptr<Connection> conn;
+  int from_user_fifo_fd;
+  int to_user_fifo_fd;
+  int socket_fd;
+  in_port_t socket_fd_bound_port;
+  ConnectionAndFDs():
+    from_user_fifo_fd(-1),
+    to_user_fifo_fd(-1),
+    socket_fd(-1) {}
+  void close_all()
+  {
+    if(from_user_fifo_fd != -1){
+      close(from_user_fifo_fd);}
+    if(to_user_fifo_fd != -1){
+      close(to_user_fifo_fd);}
+    if(socket_fd != -1){
+      close(socket_fd);}
+  }
+};
+
+
+/* create_connection() is a convenience function which prepares a Connection
+ * for use in testing.
+ */
+ConnectionAndFDs create_connection()
+{
+  ConnectionAndFDs conn_fds;
+
+  /* 1 - prepare a socket to act as the Connection's "remote peer" */
 
   /* create a socket */
-  int socket_fd = socket(AF_INET,SOCK_DGRAM,0);
-  if(socket_fd == -1){
+  conn_fds.socket_fd = socket(AF_INET,SOCK_DGRAM,0);
+  if(conn_fds.socket_fd == -1){
     throw std::runtime_error("Error: could not create socket for testing");
   }
 
@@ -44,26 +68,28 @@ TESTFUNC(Connection_move_data)
   bind_addr.sin_family = AF_INET;
   bind_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(bind_addr.sin_addr.s_addr == (in_addr_t)(-1)){
-    close(socket_fd);
+    close(conn_fds.socket_fd);
     throw std::runtime_error("Error: bad ip address for binding");
   }
   bind_addr.sin_port = htons(0);
 
   /* bind the socket */
-  if(bind(socket_fd,(sockaddr*)&bind_addr,sizeof(bind_addr)) == -1){
-    close(socket_fd);
+  if(bind(conn_fds.socket_fd,(sockaddr*)&bind_addr,sizeof(bind_addr)) == -1){
+    close(conn_fds.socket_fd);
     throw std::runtime_error("Error: could not bind");
   }
 
   /* find the socket's port */
   socklen_t socklen = sizeof(bind_addr);
-  if(getsockname(socket_fd,(sockaddr*)&bind_addr,&socklen) == -1){
-    close(socket_fd);
+  if(getsockname(conn_fds.socket_fd,(sockaddr*)&bind_addr,&socklen) == -1){
+    close(conn_fds.socket_fd);
     throw std::runtime_error("Error: could not get socket information after bind");
   }
-  in_port_t socket_fd_bound_port = ntohs(bind_addr.sin_port);
+  conn_fds.socket_fd_bound_port = ntohs(bind_addr.sin_port);
 
-  /* make a Connection */
+  /* 2 - make the Connection */
+
+  /* parameters for the Connection */
   host_id_type self_id = {0x01,0x4a,0x72,0xb1};
   std::string peer_name = "another host";
   host_id_type peer_id = {0xa3,0x90,0x1c,0x00};
@@ -76,31 +102,43 @@ TESTFUNC(Connection_move_data)
     std::make_shared<UDPSocket>("127.0.0.1",0);
   std::shared_ptr<SegmentNumGenerator> segnumgen =
     std::make_shared<SegmentNumGenerator>("segnumfile",1);
-  Connection conn(self_id,
-                  peer_name,
-                  peer_id,
-                  channel_id,
-                  fifo_base_path,
-                  key,
-                  peer_ip_addr,
-                  socket_fd_bound_port,
-                  max_packet_size,
-                  udp_socket,
-                  segnumgen);
 
-  /* open the Connection's fifos
+  conn_fds.conn = std::make_unique<Connection>(self_id,
+                                               peer_name,
+                                               peer_id,
+                                               channel_id,
+                                               fifo_base_path,
+                                               key,
+                                               peer_ip_addr,
+                                               conn_fds.socket_fd_bound_port,
+                                               max_packet_size,
+                                               udp_socket,
+                                               segnumgen);
+
+  /* 3 - open the Connection's fifos
    * Note that the literal strings "_OUTWARD" and "_INWARD" need to be kept in sync
    * with the values in Connection.cpp (this is not good and should probably be fixed
    * somehow).
    */
-  std::string read_fifo_name(fifo_base_path+"_INWARD");
-  std::string write_fifo_name(fifo_base_path+"_OUTWARD");
-  int read_fifo_fd = open(read_fifo_name.c_str(), O_RDONLY);
-  TESTASSERT( read_fifo_fd != -1 );
-  int write_fifo_fd = open(write_fifo_name.c_str(), O_WRONLY);
-  TESTASSERT( write_fifo_fd != -1 );
+  std::string to_user_fifo_name(fifo_base_path+"_INWARD");
+  std::string from_user_fifo_name(fifo_base_path+"_OUTWARD");
+  conn_fds.to_user_fifo_fd = open(to_user_fifo_name.c_str(), O_RDONLY);
+  TESTASSERT( conn_fds.to_user_fifo_fd != -1 );
+  conn_fds.from_user_fifo_fd = open(from_user_fifo_name.c_str(), O_WRONLY);
+  TESTASSERT( conn_fds.from_user_fifo_fd != -1 );
 
-  /* 2 - Test the functionality for moving data through the Connection from
+  return conn_fds;
+}
+
+
+/* Test that moving data through a Connection works correctly. This test function is very
+ * big, but that is mostly due to all the setup which is needed.
+ */
+TESTFUNC(Connection_move_data)
+{
+  ConnectionAndFDs conn_fds = create_connection();
+
+  /* Test the functionality for moving data through the Connection from
    * udp message queue to fifo.
    *
    * We put a message in the queue and check that it comes out of the fifo.
@@ -109,20 +147,20 @@ TESTFUNC(Connection_move_data)
   // put the message in the queue
   std::vector<unsigned char> msg_data{0x01,0x4a,0x72,0xb1,0x66,0x10,0xaa,0x11,
                                       0x01,0x00,0x1b,0x73,0x3c,0x20,0x4f,0xff};
-  ReceivedUDPMessage msg{true,msg_data,"127.0.0.1",socket_fd_bound_port};
-  conn.add_message(msg);
+  ReceivedUDPMessage msg{true,msg_data,"127.0.0.1",conn_fds.socket_fd_bound_port};
+  conn_fds.conn->add_message(msg);
 
   // move the data
-  conn.move_data(10);
+  conn_fds.conn->move_data(10);
 
   // check that the correct data comes out of the fifo
   std::array<unsigned char,10> buff;
-  ssize_t ret = read(read_fifo_fd,buff.data(),10);
+  ssize_t ret = read(conn_fds.to_user_fifo_fd,buff.data(),10);
   TESTASSERT(ret == 10);
   TESTASSERT((buff == \
               std::array<unsigned char,10>{0xaa,0x11,0x01,0x00,0x1b,0x73,0x3c,0x20,0x4f,0xff}));
 
-  /* 3 -Test the functionality for moving data through the Connection from the fifo
+  /* Test the functionality for moving data through the Connection from the fifo
    * to the udp socket.
    *
    * We put a message in the fifo and check that it gets sent out of the UDP port.
@@ -130,23 +168,67 @@ TESTFUNC(Connection_move_data)
 
   // put data into the fifo
   buff = {0xbb,0x12,0x01,0x00,0x07,0x75,0xaa,0xd2,0x5f,0x89};
-  ret = write(write_fifo_fd,buff.data(),10);
+  ret = write(conn_fds.from_user_fifo_fd,buff.data(),10);
   TESTASSERT(ret == 10);
 
   // move the data
-  conn.move_data(10);
+  conn_fds.conn->move_data(10);
 
   // check that the correct data arrives at the "other host" socket
   std::array<unsigned char,16> buff2;
   sockaddr_in source_addr;
   socklen_t addr_len = sizeof(source_addr);
-  ret = recvfrom(socket_fd,buff2.data(),16,0,(sockaddr*)&source_addr,&addr_len);
+  ret = recvfrom(conn_fds.socket_fd,buff2.data(),16,0,(sockaddr*)&source_addr,&addr_len);
   TESTASSERT(ret == 16);
   TESTASSERT((buff2 == std::array<unsigned char,16>                     \
               {0x01,0x4a,0x72,0xb1,0x66,0x10,0xbb,0x12,0x01,0x00,0x07,0x75,0xaa,0xd2,0x5f,0x89}));
 
 
-  close(read_fifo_fd);
-  close(write_fifo_fd);
-  close(socket_fd);
+  conn_fds.close_all();
+}
+
+
+/* test the is_data() function of Connection */
+TESTFUNC(Connection_is_data)
+{
+  {
+    ConnectionAndFDs conn_fds = create_connection();
+
+    TESTASSERT( !conn_fds.conn->is_data() );
+
+    // put a message in the queue
+    std::vector<unsigned char> msg_data{0x01,0x4a,0x72,0xb1,0x66,0x10,0xaa,0x11,
+                                        0x01,0x00,0x1b,0x73,0x3c,0x20,0x4f,0xff};
+    ReceivedUDPMessage msg{true,msg_data,"127.0.0.1",conn_fds.socket_fd_bound_port};
+    conn_fds.conn->add_message(msg);
+
+    TESTASSERT( conn_fds.conn->is_data() );
+
+    // move the data
+    conn_fds.conn->move_data(10);
+
+    TESTASSERT( !conn_fds.conn->is_data() );
+
+    conn_fds.close_all();
+  }
+
+  {
+    ConnectionAndFDs conn_fds = create_connection();
+
+    TESTASSERT( !conn_fds.conn->is_data() );
+
+    // put data into the fifo
+    std::array<unsigned char,10> buff = {0xbb,0x12,0x01,0x00,0x07,0x75,0xaa,0xd2,0x5f,0x89};
+    ssize_t ret = write(conn_fds.from_user_fifo_fd,buff.data(),10);
+    TESTASSERT(ret == 10);
+
+    TESTASSERT( conn_fds.conn->is_data() );
+
+    // move the data
+    conn_fds.conn->move_data(10);
+
+    TESTASSERT( !conn_fds.conn->is_data() );
+
+    conn_fds.close_all();
+  }
 }

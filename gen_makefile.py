@@ -17,6 +17,18 @@ def extract_quote_includes(path):
     head,_ = os.path.split(path)
     return [os.path.relpath(os.path.join(head,x)) for x in includes]
 
+# get_full_includes extracts all double-quote includes from the file at the
+# given path, and from the corresponding header file if it exists. It returns
+# a list of paths to these files from the current directory.
+def get_full_includes(path):
+    basepath,_ = os.path.splitext(path)
+    h_files = extract_quote_includes(path)
+    unit_h_file = basepath+'.h'
+    if(os.path.isfile(unit_h_file)):
+        h_files += extract_quote_includes(unit_h_file)
+        h_files = list(set(h_files))
+    return h_files
+
 if(not os.path.isdir(TESTS_DIR)):
     print(f"Error: directory \"{TESTS_DIR}\" does not exist")
     quit()
@@ -102,7 +114,7 @@ rule_template = Template(rule_template_string)
 # placeholder of makefile_template
 unit_o_file_rules_chunks = []
 for filename in unit_cpp_files:
-    h_files = ' '.join(extract_quote_includes(filename))
+    h_files = ' '.join(get_full_includes(filename))
     basename,_ = os.path.splitext(filename)
     unit_o_file_rules_chunks.append(rule_template.substitute(BASENAME=basename,
                                                              FILEPATH=filename,
@@ -113,7 +125,7 @@ unit_o_file_rules = '\n\n'.join(unit_o_file_rules_chunks)
 # placeholder of makefile_template
 test_o_file_rules_chunks = []
 for filepath in test_cpp_files:
-    h_files = ' '.join(extract_quote_includes(filepath))
+    h_files = ' '.join(get_full_includes(filepath))
     basename,_ = os.path.splitext(os.path.basename(filepath))
     test_o_file_rules_chunks.append(rule_template.substitute(BASENAME=basename,
                                                              FILEPATH=filepath,

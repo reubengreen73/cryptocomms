@@ -33,7 +33,9 @@ TESTFUNC(stress_test_segnumgen_uniqueness)
   segnum_file << std::to_string(0);
   segnum_file.close();
 
+  TESTMSG("stress-testing SegmentNumGenerator, this may take some time")
   for(int j = 0; j < 10; j++){
+    TESTMSG(" pass "+std::to_string(j+1)+" of 10");
     SegmentNumGenerator sng("testfile",j+1);
     std::vector<std::thread> threads;
 

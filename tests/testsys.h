@@ -2,9 +2,9 @@
  * .tests.cpp files
  */
 
-#include <stdexcept>
 #include <string>
 #include <stdexcept>
+#include <iostream>
 
 /* The TESTFUNC macro does more than just generate a function
  * signature with a slightly mangled name. It tells the python
@@ -45,3 +45,7 @@
                              __FILE__ " at line " TESTSYS_STRINGIFY(__LINE__)); \
   } \
 }
+
+/*
+ */
+#define TESTMSG(MSG) std::cout << "  | " << (MSG) << std::endl;

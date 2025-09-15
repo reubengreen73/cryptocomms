@@ -9,6 +9,7 @@
 #include <random>
 #include <stdexcept>
 #include <algorithm>
+#include <thread>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -203,8 +204,21 @@ bool move_data(int write_fd, int read_fd, unsigned int num_bytes, unsigned int c
 }
 
 
-/* this test creates two sessions and checks that they can communicate correctly */
-TESTFUNC(Session_monolithic)
+/* move_data_thread_func() is run in multiple threads to test parallel communication using
+   multiple channels */
+void move_data_thread_func(int write_fd, int read_fd, unsigned int num_bytes, unsigned int chunk_size,
+                           std::shared_ptr<std::mutex> sync_lock, std::shared_ptr<std::vector<int>> results,
+                           int results_index)
+{
+  // this lock() and unlock() is to approximately synchronize all the threads
+  sync_lock->lock();
+  sync_lock->unlock();
+  (*results)[results_index] = move_data(write_fd,read_fd,num_bytes,chunk_size);
+}
+
+
+/* this test creates two sessions and checks that they can communicate correctly on one channel */
+TESTFUNC(Session_one_channel)
 {
   /* parameters for the two sessions */
   std::string host_A_name("host A");
@@ -258,11 +272,123 @@ TESTFUNC(Session_monolithic)
 
   /* repeatedly test our connection with different amounts of data and different
      sizes of chunk to be written to the connection at a time */
-  for(int i=0; i<100; i++){
+  TESTMSG("testing a single-channel configuration, this may take some time")
+  for(int i=1; i<101; i++){
     unsigned int num_bytes = 500'000 +(dist100(rng)*100)+dist100(rng);
     unsigned int chunk_size = 1000+dist100(rng);
+    if(i%10 == 0){
+      TESTMSG("  pass "+std::to_string(i)+" of 100");}
     TESTASSERT( move_data(write_fifo_fd,read_fifo_fd,num_bytes,chunk_size) );
   }
+
+  host_A.close_all();
+  host_B.close_all();
+}
+
+
+/* this test creates two Sessions and tests that they can communicate correctly using
+   multiple channels simultaneously */
+TESTFUNC(Session_many_channels)
+{
+  /* parameters for the two sessions */
+  std::string host_A_name("host A");
+  std::string host_B_name("host B");
+  host_id_type host_A_id{0x01,0xab,0x00,0x53};
+  host_id_type host_B_id{0x21,0x03,0x82,0x0f};
+  std::string host_A_fifo_base_name("host_A_fifo");
+  std::string host_B_fifo_base_name("host_B_fifo");
+  std::string ip_addr("127.0.0.1");
+  in_port_t host_A_port = 12991;
+  in_port_t host_B_port = 12992;
+  int max_packet_size = 1000;
+  std::string segnum_file_name = "segnumfile";
+  SecretKey key("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
+
+
+  /* create the configuration for multiply channels of communication */
+  int num_channels = 10;
+  std::vector<channel_spec> host_A_peer_config_channels;
+  std::vector<channel_spec> host_B_peer_config_channels;
+  for(int i=0; i<num_channels; i++){
+    channel_id_type channel_id{0,static_cast<unsigned char>(i)};
+
+    std::string host_A_fifo_name = host_A_fifo_base_name+std::to_string(i);
+    host_A_peer_config_channels.push_back(channel_spec{channel_id,host_A_fifo_name});
+
+    std::string host_B_fifo_name = host_B_fifo_base_name+std::to_string(i);
+    host_B_peer_config_channels.push_back(channel_spec{channel_id,host_B_fifo_name});
+  }
+
+  /* each Session needs a PeerConfig containing details of the other session */
+  PeerConfig host_A_peer_config{host_A_name,
+                                host_A_id,
+                                key,
+                                host_A_peer_config_channels,
+                                ip_addr,
+                                host_A_port,
+                                max_packet_size};
+  PeerConfig host_B_peer_config{host_B_name,
+                                host_B_id,
+                                key,
+                                host_B_peer_config_channels,
+                                ip_addr,
+                                host_B_port,
+                                max_packet_size};
+
+  SessionAndFDs host_A = make_session(host_A_id,
+                                      ip_addr,host_A_port,
+                                      max_packet_size,
+                                      {host_B_peer_config},
+                                      segnum_file_name,
+                                      5);
+  SessionAndFDs host_B = make_session(host_B_id,
+                                      ip_addr,host_B_port,
+                                      max_packet_size,
+                                      {host_A_peer_config},
+                                      segnum_file_name,
+                                      5);
+
+
+  /* We can now actually perform the tests. For this, we shall spawn one thread per channel, and
+     have them all read and write data across the channels simultaneously. We create a vector
+     of ints, "results", for the threads to record whether the data was transmitted successfully.
+     Really we would want to use a vector of bools here, but in C++ a std::vector<bool> is special
+     and does not allow thread-safe access to different elements.
+   */
+  std::vector<std::thread> threads;
+  std::shared_ptr<std::vector<int>> results = std::make_shared<std::vector<int>>(num_channels,0);
+
+  /* set up random number generation to allow a bit of randomization in the sending of data */
+  std::mt19937 rng(std::random_device{}());
+  std::uniform_int_distribution<std::mt19937::result_type> dist100(-100,100);
+
+  /* Spawn one thread per channel to read and write data. The mutex in sync_lock is used to make
+     all the threads start actually reading and writing data at approximately the same time.
+   */
+  std::shared_ptr<std::mutex> sync_lock = std::make_shared<std::mutex>();
+  sync_lock->lock();
+  for(int i=0; i<num_channels; i++){
+    unsigned int num_bytes = 30'000'000 +(dist100(rng)*1000)+dist100(rng);
+    unsigned int chunk_size = 1000+dist100(rng);
+    channel_id_type channel_id{0,static_cast<unsigned char>(i)};
+    threads.push_back(std::thread(move_data_thread_func,
+                                  host_A.from_user_fifos[channel_id],
+                                  host_B.to_user_fifos[channel_id],
+                                  num_bytes,
+                                  chunk_size,
+                                  sync_lock,
+                                  results,
+                                  i));
+  }
+
+  TESTMSG("testing parallel communication in multiple channels, this may take some time");
+  sync_lock->unlock();
+  for(int i=0; i<num_channels; i++){
+    threads[i].join();}
+
+  /* Check the results. Each thread records a 1 in "results" if the data was sent correctly,
+     and a 0 otherwise */
+  TESTASSERT( std::find(results->begin(),results->end(),0) == results->end() );
 
   host_A.close_all();
   host_B.close_all();

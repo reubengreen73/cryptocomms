@@ -226,6 +226,7 @@ TESTFUNC(example_simple)
   TESTASSERT(cfp.self_ip_addr == "192.168.3.55");
   TESTASSERT(cfp.self_port == 1003);
   TESTASSERT(cfp.default_max_packet_size == -1);
+  TESTASSERT(cfp.segnum_filepath == "");
 
   TESTASSERT(cfp.peer_configs.size() == 1);
 
@@ -351,4 +352,20 @@ TESTFUNC(default_max_packet_size)
 {
   ConfigFileParser cfp(config_path+"config-example-self-max-size");
   TESTASSERT(cfp.default_max_packet_size == 1234);
+}
+
+
+/* check that having a segment_number_file option in "self" works correctly */
+TESTFUNC(segment_number_file_example)
+{
+  ConfigFileParser cfp(config_path+"config-example-segnum");
+  TESTASSERT(cfp.segnum_filepath == "/root/cryptocomms/segnums");
+}
+
+
+/* check that having a segment_number_file option not in "self" gives the correct error */
+TESTFUNC(segment_number_file_error)
+{
+  TESTTHROW( ConfigFileParser cfp(config_path+"config-error-segnum"),
+             "\"segment_number_file\" only allowed for \"self\"" );
 }

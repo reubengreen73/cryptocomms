@@ -22,6 +22,7 @@ public:
   std::string self_ip_addr;
   in_port_t self_port;
   int default_max_packet_size; // a value of -1 here indicates no default max packet size set
+  std::string segnum_filepath;
 };
 
 #endif

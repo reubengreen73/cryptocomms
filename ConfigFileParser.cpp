@@ -12,6 +12,15 @@ namespace
 {
   const std::string self_name = "self";
 
+  /* FilePeerConfig is a subclass of PeerConfig which ConfigFileParser
+     uses internally to allow for the storage of the segnum file path
+     for the "self" host, which belongs in a config file but not in a
+     PeerConfig */
+  struct FilePeerConfig: public PeerConfig
+  {
+    std::string segnum_filepath;
+  };
+
   /* not_isspace() is a simple predicate to be passed to algorithms */
   bool not_isspace(const unsigned char ch)
   { return !std::isspace(ch); }
@@ -399,7 +408,7 @@ namespace
    * parse_peer_config() returns false to signal that all lines have been consumed,
    * and true otherwise.
    */
-  bool parse_peer_config(PeerConfig& peer_config, ParseState& parse_state)
+  bool parse_peer_config(FilePeerConfig& peer_config, ParseState& parse_state)
   {
     if(parse_state.pos == parse_state.lines.end()){
       return false;
@@ -489,6 +498,12 @@ namespace
         else if(option_name == "max_size")
           peer_config.max_packet_size = parse_max_size(option_value);
 
+        else if( (option_name == "segment_number_file") and (peer_config.name != self_name) )
+          throw ConfigLineError("\"segment_number_file\" only allowed for \""+self_name+"\"");
+
+        else if( (option_name == "segment_number_file") and (peer_config.name == self_name) )
+          peer_config.segnum_filepath = option_value;
+
         else
           throw ConfigLineError("invalid option name \""+option_name+"\"");
 
@@ -557,7 +572,7 @@ namespace
 ConfigFileParser::ConfigFileParser(const std::string& path)
 {
   ParseState parse_state(path);
-  PeerConfig peer_config;
+  FilePeerConfig peer_config;
   std::set<std::string> config_names_seen;
   while(parse_peer_config(peer_config,parse_state)){
 
@@ -574,9 +589,10 @@ ConfigFileParser::ConfigFileParser(const std::string& path)
        * if no maximum packet size is given in the config file
        */
       default_max_packet_size = peer_config.max_packet_size;
+      segnum_filepath = peer_config.segnum_filepath;
     }
     else{
-      peer_configs.push_back(peer_config);
+      peer_configs.push_back(PeerConfig(peer_config));
     }
 
   }

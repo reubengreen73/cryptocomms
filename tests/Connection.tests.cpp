@@ -59,7 +59,7 @@ ConnectionAndFDs create_connection()
   /* create a socket */
   conn_fds.socket_fd = socket(AF_INET,SOCK_DGRAM,0);
   if(conn_fds.socket_fd == -1){
-    throw std::runtime_error("Error: could not create socket for testing");
+    throw std::runtime_error("Test Error: could not create socket for testing");
   }
 
   /* prepare an address struct to bind the socket */
@@ -69,21 +69,21 @@ ConnectionAndFDs create_connection()
   bind_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(bind_addr.sin_addr.s_addr == (in_addr_t)(-1)){
     close(conn_fds.socket_fd);
-    throw std::runtime_error("Error: bad ip address for binding");
+    throw std::runtime_error("Test Error: bad ip address for binding");
   }
   bind_addr.sin_port = htons(0);
 
   /* bind the socket */
   if(bind(conn_fds.socket_fd,(sockaddr*)&bind_addr,sizeof(bind_addr)) == -1){
     close(conn_fds.socket_fd);
-    throw std::runtime_error("Error: could not bind");
+    throw std::runtime_error("Test Error: could not bind");
   }
 
   /* find the socket's port */
   socklen_t socklen = sizeof(bind_addr);
   if(getsockname(conn_fds.socket_fd,(sockaddr*)&bind_addr,&socklen) == -1){
     close(conn_fds.socket_fd);
-    throw std::runtime_error("Error: could not get socket information after bind");
+    throw std::runtime_error("Test Error: could not get socket information after bind");
   }
   conn_fds.socket_fd_bound_port = ntohs(bind_addr.sin_port);
 

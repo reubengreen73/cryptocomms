@@ -42,16 +42,16 @@ namespace
     if( (res == -1) && (errno == ENOENT) ){
       /* no file at path, so create a fifo */
       if(mkfifo(path.c_str(), S_IWUSR|S_IRUSR|S_IRGRP|S_IROTH) == -1){
-        throw std::runtime_error("could not create FIFO at "+path);
+        throw std::runtime_error("FifoIO: could not create FIFO at "+path);
       }
     }
     else if(res == -1){
-      throw std::runtime_error("could not stat file at "+path);
+      throw std::runtime_error("FifoIO: could not stat file at "+path);
     }
     else{
       /* there is a file at path, so check that it is a fifo */
       if( (stat_info.st_mode & S_IFIFO) == 0 ){
-        throw std::runtime_error(path+" is not a FIFO");
+        throw std::runtime_error("FifoIO: "+path+" is not a FIFO");
       }
     }
 
@@ -62,18 +62,18 @@ namespace
     while(fd == -1){
       fd = open(path.c_str(), open_flags);
       if( (fd == -1) && (errno != EINTR) ){
-        throw std::runtime_error("could not open "+path);
+        throw std::runtime_error("FifoIO: could not open "+path);
       }
     }
 
     /*  check that the file descriptor represents a fifo */
     if(fstat(fd,&stat_info) == -1){
       close(fd);
-      throw std::runtime_error("could not stat file at "+path);
+      throw std::runtime_error("FifoIO: could not stat file at "+path);
     }
     if( (stat_info.st_mode & S_IFIFO) == 0 ){
       close(fd);
-      throw std::runtime_error(path+" is not a FIFO");
+      throw std::runtime_error("FifoIO: "+path+" is not a FIFO");
     }
 
     return fd;
@@ -162,7 +162,7 @@ std::vector<unsigned char> FifoFromUser::read(unsigned int count)
       if(errno == EAGAIN){ // the read would block if fd_ were not O_NONBLOCK
         break;
       }
-      throw FifoIOError("error reading from fifo "+path_);
+      throw FifoIOError("FifoIO: error reading from fifo "+path_);
     }
     if(ret == 0){ // end-of-file on fifo
       break;
@@ -264,7 +264,7 @@ std::pair<unsigned int,bool> FifoToUser::write(const std::vector<unsigned char>&
         // EAGAIN means the pipe is full
         break;
       }
-      throw FifoIOError("error writing to fifo "+path_);
+      throw FifoIOError("FifoIO: error writing to fifo "+path_);
     }
     total_written += ret;
   }

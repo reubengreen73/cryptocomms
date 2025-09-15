@@ -28,7 +28,7 @@ TESTFUNC(SegmentNumGenerator_stress_test_segnumgen_uniqueness)
 
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
-       throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
+       throw std::runtime_error(std::string("Test Error: could not open \"testfile\""));
   }
   segnum_file << std::to_string(0);
   segnum_file.close();
@@ -71,7 +71,7 @@ TESTFUNC(SegmentNumGenerator_stress_test_segnumgen_uniqueness)
 TESTFUNC(SegmentNumGenerator_segnumgen_file_missing){
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
-       throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
+       throw std::runtime_error(std::string("Test Error: could not open \"testfile\""));
   }
 
   segnum_file.close();
@@ -89,7 +89,7 @@ TESTFUNC(SegmentNumGenerator_segnumgen_file_missing){
 TESTFUNC(SegmentNumGenerator_segnumgen_file_is_nonsense){
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
-       throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
+       throw std::runtime_error(std::string("Test Error: could not open \"testfile\""));
   }
   segnum_file << "blah blah";
   segnum_file.close();
@@ -104,7 +104,7 @@ TESTFUNC(SegmentNumGenerator_segnumgen_file_is_nonsense){
 TESTFUNC(SegmentNumGenerator_segnumgen_file_value_too_high){
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
-       throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
+       throw std::runtime_error(std::string("Test Error: could not open \"testfile\""));
   }
   segnum_file << "281474976710655";
   segnum_file.close();
@@ -119,7 +119,7 @@ TESTFUNC(SegmentNumGenerator_segnumgen_file_value_too_high){
 TESTFUNC(SegmentNumGenerator_set_reserved_with_zero){
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
-       throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
+       throw std::runtime_error(std::string("Test Error: could not open \"testfile\""));
   }
   segnum_file << std::to_string(0);;
   segnum_file.close();

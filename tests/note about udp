@@ -1,0 +1,11 @@
+Several of these tests involve sending and receiving UDP datagrams. These exchanges always happen
+between sockets on localhost, but in theory UDP can still be unreliable in this setting.
+
+Most systems will (I think) in practice always achieve reliable in-order delivery of UDP datagrams
+between sockets on localhost, provided that the amount of data written does not overflow internal
+buffers.
+
+The tests here assume that the host provides reliable in-order delivery of UDP datagrams between
+sockets on localhost, provided that only a small amount of data is written to the sending socket
+at a time, and that this data is then read out of the receiving socket before any more data is sent.
+Specifically, the "small amount" assumed is about 1500 bytes at a time.

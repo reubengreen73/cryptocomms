@@ -21,7 +21,7 @@ void stress_test_segnumgen_uniqueness_thread_func(std::vector<std::uint_least64_
  * SegmentNumGenerator to generate lots of segment numbers in parallel. All the
  * segment numbers generated are then checked for repetitions.
  */
-TESTFUNC(stress_test_segnumgen_uniqueness)
+TESTFUNC(SegmentNumGenerator_stress_test_segnumgen_uniqueness)
 {
   int num_threads = 20;
   std::vector<std::vector<std::uint_least64_t>> segnum_vectors(num_threads);
@@ -68,7 +68,7 @@ TESTFUNC(stress_test_segnumgen_uniqueness)
 
 /* Check that a missing stored segnum file causes the correct error to be thrown
  */
-TESTFUNC(segnumgen_file_missing){
+TESTFUNC(SegmentNumGenerator_segnumgen_file_missing){
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
        throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
@@ -86,7 +86,7 @@ TESTFUNC(segnumgen_file_missing){
 
 /* Check that a stored segnum file with non-numerical content causes the correct error to be thrown
  */
-TESTFUNC(segnumgen_file_is_nonsense){
+TESTFUNC(SegmentNumGenerator_segnumgen_file_is_nonsense){
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
        throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
@@ -101,7 +101,7 @@ TESTFUNC(segnumgen_file_is_nonsense){
 
 /* Check that a stored segnum file with a value that is too big causes the correct error to be thrown
  */
-TESTFUNC(segnumgen_file_value_too_high){
+TESTFUNC(SegmentNumGenerator_segnumgen_file_value_too_high){
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
        throw std::runtime_error(std::string("Test error: could not open \"testfile\""));
@@ -116,7 +116,7 @@ TESTFUNC(segnumgen_file_value_too_high){
 
 /* Check that calling set_reserved() with argument 0 throws the expected error
  */
-TESTFUNC(set_reserved_with_zero){
+TESTFUNC(SegmentNumGenerator_set_reserved_with_zero){
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
        throw std::runtime_error(std::string("Test error: could not open \"testfile\""));

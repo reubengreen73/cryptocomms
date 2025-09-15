@@ -13,7 +13,7 @@
 const std::string config_path = "../tests/configfileparser-tests/";
 
 /* check that hex strings of the wrong length trigger the correct error */
-TESTFUNC(hex_wrong_length)
+TESTFUNC(ConfigFileParser_hex_wrong_length)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-hex-wrong-length-1"),
             "string is the wrong length");
@@ -23,7 +23,7 @@ TESTFUNC(hex_wrong_length)
 
 
 /* check that an invalid character in a hex string triggers the correct error */
-TESTFUNC(hex_invalid_characters)
+TESTFUNC(ConfigFileParser_hex_invalid_characters)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-hex-invalid-characters"),
             "invalid characters present");
@@ -31,7 +31,7 @@ TESTFUNC(hex_invalid_characters)
 
 
 /* check that an invalid integer string triggers the correct error */
-TESTFUNC(int_invalid_number)
+TESTFUNC(ConfigFileParser_int_invalid_number)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-int-invalid"),
             "invalid number");
@@ -39,7 +39,7 @@ TESTFUNC(int_invalid_number)
 
 
 /* check that an out-of-range integer triggers the correct error */
-TESTFUNC(int_out_of_range)
+TESTFUNC(ConfigFileParser_int_out_of_range)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-int-out-of-range"),
             "number out of range, allowed range is");
@@ -47,7 +47,7 @@ TESTFUNC(int_out_of_range)
 
 
 /* check that an invalid character in a name triggers the correct error */
-TESTFUNC(name_invalid_characters)
+TESTFUNC(ConfigFileParser_name_invalid_characters)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-name-invalid-characters"),
             "invalid characters in name");
@@ -57,7 +57,7 @@ TESTFUNC(name_invalid_characters)
 /* check that a channel with no whitespace separating the identifier and
  * path triggers the correct error
  */
-TESTFUNC(channel_no_whitespace)
+TESTFUNC(ConfigFileParser_channel_no_whitespace)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-channel-no-whitespace"),
             "no whitespace in channel specifier");
@@ -65,7 +65,7 @@ TESTFUNC(channel_no_whitespace)
 
 
 /* check that an illegal character in an IP address triggers the correct error */
-TESTFUNC(ip_illegal_character)
+TESTFUNC(ConfigFileParser_ip_illegal_character)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-illegal-character"),
             "illegal character in ip address");
@@ -75,7 +75,7 @@ TESTFUNC(ip_illegal_character)
 /* check that an IP address which does not have exactly 3 instances of '.'
  * triggers the correct error
  */
-TESTFUNC(ip_dots_wrong)
+TESTFUNC(ConfigFileParser_ip_dots_wrong)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-dots-1"),
             "malformed ip address");
@@ -89,7 +89,7 @@ TESTFUNC(ip_dots_wrong)
 /* check that an IP address whose segments (i.e. numbers between the dots)
  * have too many or too few characters triggers the correct error
  */
-TESTFUNC(ip_segment_size)
+TESTFUNC(ConfigFileParser_ip_segment_size)
 {
   /* we test for errors with an empty segment in the first, second, and
    * fourth segments
@@ -109,7 +109,7 @@ TESTFUNC(ip_segment_size)
 /* check that an IP address containing a number bigger than 255 triggers
  * the correct error
  */
-TESTFUNC(ip_segment_too_big)
+TESTFUNC(ConfigFileParser_ip_segment_too_big)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-ip-segment-too-big"),
             "invalid ip address");
@@ -117,7 +117,7 @@ TESTFUNC(ip_segment_too_big)
 
 
 /* check that a config line with no ':' triggers the correct error */
-TESTFUNC(split_line_no_colon)
+TESTFUNC(ConfigFileParser_split_line_no_colon)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-split-line-no-colon"),
             "no ':' in line");
@@ -125,7 +125,7 @@ TESTFUNC(split_line_no_colon)
 
 
 /* check that a config line with an empty option field triggers the correct error */
-TESTFUNC(split_line_no_option_field)
+TESTFUNC(ConfigFileParser_split_line_no_option_field)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-split-line-no-option-field"),
             "empty option field");
@@ -133,7 +133,7 @@ TESTFUNC(split_line_no_option_field)
 
 
 /* check that having a key for the "self" config triggers the correct error */
-TESTFUNC(key_for_self)
+TESTFUNC(ConfigFileParser_key_for_self)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-key-for-self"),
             "\"key\" not allowed");
@@ -141,7 +141,7 @@ TESTFUNC(key_for_self)
 
 
 /* check that having a channel for the "self" config triggers the correct error */
-TESTFUNC(channel_for_self)
+TESTFUNC(ConfigFileParser_channel_for_self)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-channel-for-self"),
             "\"channel\" not allowed");
@@ -149,7 +149,7 @@ TESTFUNC(channel_for_self)
 
 
 /* check that an invalid option triggers the correct error */
-TESTFUNC(invalid_option)
+TESTFUNC(ConfigFileParser_invalid_option)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-invalid-option"),
             "invalid option name");
@@ -157,7 +157,7 @@ TESTFUNC(invalid_option)
 
 
 /* check that a missing option triggers the correct error */
-TESTFUNC(missing_option)
+TESTFUNC(ConfigFileParser_missing_option)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-missing-option"),
             "missing options for");
@@ -165,7 +165,7 @@ TESTFUNC(missing_option)
 
 
 /* check that a missing configuration for self triggers the correct error */
-TESTFUNC(missing_self_config)
+TESTFUNC(ConfigFileParser_missing_self_config)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-missing-self"),
             "missing configuration for self");
@@ -173,7 +173,7 @@ TESTFUNC(missing_self_config)
 
 
 /* check that a repeated configuration for self triggers the correct error */
-TESTFUNC(repeated_config)
+TESTFUNC(ConfigFileParser_repeated_config)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-repeated-config"),
             "multiple configurations for \"other_host\"");
@@ -181,7 +181,7 @@ TESTFUNC(repeated_config)
 
 
 /* check that a missing config file triggers the correct error */
-TESTFUNC(missing_config_file)
+TESTFUNC(ConfigFileParser_missing_config_file)
 {
   TESTTHROW(ConfigFileParser(config_path+"non-existent-config-file"),
             "could not open config file");
@@ -191,7 +191,7 @@ TESTFUNC(missing_config_file)
 /* check that a configuration which does not start with a "name" line
  * triggers the correct error
  */
-TESTFUNC(name_not_first)
+TESTFUNC(ConfigFileParser_name_not_first)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-name-not-first"),
             "expected option \"name\"");
@@ -199,7 +199,7 @@ TESTFUNC(name_not_first)
 
 
 /* check that a repeated option triggers the correct error */
-TESTFUNC(repeated_error)
+TESTFUNC(ConfigFileParser_repeated_error)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-repeated-option"),
             "configuration option \"id\" repeated");
@@ -207,7 +207,7 @@ TESTFUNC(repeated_error)
 
 
 /* check that a repeated channel id or path triggers the correct error */
-TESTFUNC(repeated_channel_path_id_error)
+TESTFUNC(ConfigFileParser_repeated_channel_path_id_error)
 {
   TESTTHROW(ConfigFileParser(config_path+"config-error-repeated-channel-id"),
             " duplicated channel id");
@@ -218,7 +218,7 @@ TESTFUNC(repeated_channel_path_id_error)
 
 
 /* check that an example configuration file produces the expected parsed values */
-TESTFUNC(example_simple)
+TESTFUNC(ConfigFileParser_example_simple)
 {
   ConfigFileParser cfp(config_path+"config-example-simple");
 
@@ -251,7 +251,7 @@ TESTFUNC(example_simple)
 
 
 /* check that a config file with just a "self" config works as expected */
-TESTFUNC(example_just_self){
+TESTFUNC(ConfigFileParser_example_just_self){
   ConfigFileParser cfp(config_path+"config-example-just-self");
   TESTASSERT(cfp.peer_configs.size() == 0);
 }
@@ -260,7 +260,7 @@ TESTFUNC(example_just_self){
 /* check that an example configuration file with multiple other hosts produces the expected
  * result
  */
-TESTFUNC(example_multiple_other)
+TESTFUNC(ConfigFileParser_example_multiple_other)
 {
   ConfigFileParser cfp(config_path+"config-example-multiple-other");
 
@@ -320,7 +320,7 @@ TESTFUNC(example_multiple_other)
 
 
 /* check that the edge case of another host with no channels works as expected */
-TESTFUNC(no_channels)
+TESTFUNC(ConfigFileParser_no_channels)
 {
     ConfigFileParser cfp(config_path+"config-example-no-channels");
     TESTASSERT(cfp.peer_configs.size() == 1);
@@ -329,7 +329,7 @@ TESTFUNC(no_channels)
 
 
 /* check that another host with multiple channels works as expected */
-TESTFUNC(multiple_channels)
+TESTFUNC(ConfigFileParser_multiple_channels)
 {
     ConfigFileParser cfp(config_path+"config-example-multiple-channels");
     TESTASSERT(cfp.peer_configs.size() == 1);
@@ -348,7 +348,7 @@ TESTFUNC(multiple_channels)
 
 
 /* check that configuring default maximum packet size works */
-TESTFUNC(default_max_packet_size)
+TESTFUNC(ConfigFileParser_default_max_packet_size)
 {
   ConfigFileParser cfp(config_path+"config-example-self-max-size");
   TESTASSERT(cfp.default_max_packet_size == 1234);
@@ -356,7 +356,7 @@ TESTFUNC(default_max_packet_size)
 
 
 /* check that having a segment_number_file option in "self" works correctly */
-TESTFUNC(segment_number_file_example)
+TESTFUNC(ConfigFileParser_segment_number_file_example)
 {
   ConfigFileParser cfp(config_path+"config-example-segnum");
   TESTASSERT(cfp.segnum_filepath == "/root/cryptocomms/segnums");
@@ -364,7 +364,7 @@ TESTFUNC(segment_number_file_example)
 
 
 /* check that having a segment_number_file option not in "self" gives the correct error */
-TESTFUNC(segment_number_file_error)
+TESTFUNC(ConfigFileParser_segment_number_file_error)
 {
   TESTTHROW( ConfigFileParser cfp(config_path+"config-error-segnum"),
              "\"segment_number_file\" only allowed for \"self\"" );

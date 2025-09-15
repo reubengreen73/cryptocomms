@@ -4,7 +4,7 @@
 #include <string>
 
 /* test that the constructor which takes a hex string produces the correct key*/
-TESTFUNC(construct_from_hex_str)
+TESTFUNC(SecretKey_construct_from_hex_str)
 {
   std::string hex_str = "00010a0Aa0A0ffFF00010203c1c2c3f0fafbfc01234567890abcdef0ABCDEF00";
   SecretKey sk(hex_str);
@@ -20,7 +20,7 @@ TESTFUNC(construct_from_hex_str)
 }
 
 /* test that hex strings which are too long or short produce the correct error */
-TESTFUNC(hex_str_too_short_or_long)
+TESTFUNC(SecretKey_hex_str_too_short_or_long)
 {
   std::string hex_str_short = "00010a0Aa0A0ffFF00010203c1c2c3f0fafbfc01234567890abcdef0ABCDEF0";
   TESTTHROW(SecretKey sk(hex_str_short),"SecretKey: initialization string has wrong length");
@@ -30,7 +30,7 @@ TESTFUNC(hex_str_too_short_or_long)
 }
 
 /* test that hex strings with junk characters throw an error */
-TESTFUNC(hex_invalid_char)
+TESTFUNC(SecretKey_hex_invalid_char)
 {
   std::string hex_str;
 
@@ -42,14 +42,14 @@ TESTFUNC(hex_invalid_char)
 }
 
 /* check that a default-initialized SecretKey is not valid */
-TESTFUNC(default_initialized_invalid)
+TESTFUNC(SecretKey_default_initialized_invalid)
 {
   SecretKey sk;
   TESTTHROW(sk.data(),"SecretKey: key used while invalid");
 }
 
 /* check that a moved-from SecretKey is not valid */
-TESTFUNC(moved_from_invalid)
+TESTFUNC(SecretKey_moved_from_invalid)
 {
   std::string hex_str = "00010a0Aa0A0ffFF00010203c1c2c3f0fafbfc01234567890abcdef0ABCDEF00";
   SecretKey sk1(hex_str);

@@ -7,7 +7,7 @@
 
 
 /* check that bad IP address strings give the correct error */
-TESTFUNC(udpsocket_ctor_bad_ip_addr)
+TESTFUNC(UDPSocket_ctor_bad_ip_addr)
 {
   std::string expected_err = "bad ip address for binding";
   TESTTHROW(UDPSocket("",0), expected_err);
@@ -18,7 +18,7 @@ TESTFUNC(udpsocket_ctor_bad_ip_addr)
 
 
 /* check that basic sending and receiving works correctly */
-TESTFUNC(udpsocket_send_receive)
+TESTFUNC(UDPSocket_send_receive)
 {
   UDPSocket sock1{"127.0.0.1",0};
   UDPSocket sock2{"127.0.0.1",0};
@@ -31,7 +31,7 @@ TESTFUNC(udpsocket_send_receive)
 }
 
 
-TESTFUNC(udpsocket_receive_sender_details)
+TESTFUNC(UDPSocket_receive_sender_details)
 {
   UDPSocket sock1{"127.0.0.1",0};
   UDPSocket sock2{"127.0.0.1",0};
@@ -51,7 +51,7 @@ TESTFUNC(udpsocket_receive_sender_details)
 
 
 /* check that use after move produces the correct errors */
-TESTFUNC(udpsocket_use_after_move)
+TESTFUNC(UDPSocket_use_after_move)
 {
   UDPSocket sock1{"127.0.0.1",0};
   UDPSocket sock2(std::move(sock1));
@@ -62,7 +62,7 @@ TESTFUNC(udpsocket_use_after_move)
 
 
 /* check that UDPSocket reports ip address and port correctly */
-TESTFUNC(udpsocket_ip_port_reporting)
+TESTFUNC(UDPSocket_ip_port_reporting)
 {
   UDPSocket sock{"127.0.0.1",57821};
   TESTASSERT( sock.bound_port() == 57821 );

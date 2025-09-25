@@ -1,12 +1,15 @@
-=== Overview ===
-Cryptocomms will be a simple system for encrypted communication written in C++.
-
-The purpose of this project is for me to demonstrate my skills in software development,
-and in C++ in particular. It is NOT intended for actual use, as I am not an expert in
-cryptography or secure coding.
+CRYPTOCOMMS IS INTENDED SOLELY AS A DEMONSTRATION OF THE AUTHOR'S SKILLS AND SHOULD
+NOT BE USED TO SECURE REAL COMMUNICATIONS. SEE THE FILE WARNING_README FOR THE FULL
+WARNING.
 
 
-== Build system ===
+For a general introduction to Cryptocomms, see the user manual.
+
+
+################
+# Build system #
+################
+
 Cryptocomms uses a very simple custom build system.
 
 The build system is a python script, gen_makefile.py, which examines the project
@@ -14,7 +17,7 @@ files and generates a Makefile. This Makefile can then be used to compile the pr
 More specifically, the gen_makefile.py script scans each .cpp for #include lines with
 double quotes, and then deduces dependencies accordingly.
 
-Conceptually, the cryptocomms source code consists of the file main.cpp and a number of
+Conceptually, the Cryptocomms source code consists of the file main.cpp and a number of
 "units", each unit being composed of a .cpp file and a .h file with matching base file
 names. These source files live in the top-level project directory.
 
@@ -27,7 +30,10 @@ The gen_makefile.py script needs to be re-run when a new .cpp file is added (inc
 change.
 
 
-== Test framework ===
+##################
+# Test framework #
+##################
+
 Cryptocomms uses a very simple custom test framework.
 
 The main component of the test framework is a python script, gen_tester.py, which generates

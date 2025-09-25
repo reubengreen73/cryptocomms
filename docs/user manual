@@ -1,0 +1,172 @@
+CRYPTOCOMMS IS INTENDED SOLELY AS A DEMONSTRATION OF THE AUTHOR'S SKILLS AND SHOULD
+NOT BE USED TO SECURE REAL COMMUNICATIONS. SEE THE FILE WARNING_README FOR THE FULL
+WARNING.
+
+
+################
+# Introduction #
+################
+
+This file is the current work-in-progress version of the user manual for Cryptocomms. Some
+of the text below describes features yet to be implemented. I have added notes in square
+brackets to clarify which features have and have not been implemented, as well as places
+where this manual is not yet complete, with the format [NOTE: note text goes here].
+
+Cryptocomms is a simple system for reliable encrypted communication written in C++. Cryptocomms
+is in the process of being developed by me, Reuben Green, as a vehicle for demonstrating my
+ability in C++ and software development. Cryptocomms is intended exclusively for this purpose,
+and is NOT intended to be used to protect real communications, see the file WARNING_README.
+
+I am still in the process of developing a first full version of Cryptocomms. Currently
+(25 September 2025) Cryptocomms can move data between hosts, but does not yet have encryption,
+authentication, or reliability.
+
+
+############
+# Overview #
+############
+[NOTE: Cryptocomms can currently move data between hosts, but does so without any
+ of the encryption, authentication, or reliability described in this section.]
+
+Cryptocomms is a simple system for reliable encrypted communication written in C++.
+
+Cryptocomms allows two or more devices to communicate securely using a simple system of
+encryption and authentication. A device using Cryptocomms for communication is called a
+"host" in this documentation.
+
+To use Cryptocomms on a device, a user must create a configuration file which includes
+details of all other Cryptocomms hosts which the device may communicate with. When
+Cryptocomms starts, it reads this configuration file and, for each remote host, creates
+one or more pairs of FIFOs in the local file system to allow communication with the remote
+host. Each pair of FIFOs provides a separate "channel" of communication with the remote
+host and corresponds to a matching pair of FIFOs on the remote host. Each FIFO pair has
+an "outbound" and an "inbound" FIFO, and the essential functionality of Cryptocomms is
+that anything written to the "outbound" FIFO on one host appears on the "inbound" FIFO on
+the other host.
+
+Cryptocomms should work on any POSIX-conforming system, but it has so far been developed and
+tested only on Debian Linux.
+
+
+########################
+# Building Cryptocomms #
+########################
+
+Building Cryptocomms requires the GNU C++ compiler and associated toolchain and libraries,
+Python3, and make (any version of make should work, but only GNU make has been tested).
+
+Building Cryptocomms is a two-stage process. First, generate the Makefile by running
+the Python script gen_makefile.py. Then build the code by running one of "make all",
+"make cryptocomms" or "make tester". These three make targets work as follows: the
+"cryptocomms" target builds the main cryptocomms binary, the "tester" target builds
+the test binary (see below), and "all" does both. There is also a "make clean" target
+which removes all generated files except the Makefile itself.
+
+To check that everything is working correctly, you can build and run the "tester" binary.
+To do a full test, just run this binary with no arguments (see the developer manual for
+more details on running the test binary). This may take some time to run, and will print
+"ALL TESTS PASSED" in the event of success.
+
+By default, all binaries are built with debugging symbols. To disable this, you can add
+DBG="" to the make arguments, e.g.
+make DBG="" all
+
+The only build product needed to run Cryptocomms is the cryptocomms binary file, which can
+be used in place or moved to another location.
+
+
+###########################
+# Configuring Cryptocomms #
+###########################
+
+Cryptocomms is controlled via a configuration file. The path to this file needs to be supplied
+as the sole argument of the cryptocomms binary. The configuration file contains configuration
+for the host itself, as well as details of all remote hosts it can communicate with. Here
+is a simple example of a configuration file (the file text is everything between, but not
+including, the two "---EXAMPLE CONFIG FILE---" lines).
+
+---EXAMPLE CONFIG FILE---
+# config for this host
+name: self
+id: 70F03a83
+ip: 192.168.3.55
+port: 1003
+
+# config for "other_host"
+name: other_host
+id: 01a7B0f9
+ip: 192.168.17.19
+key: 0123456789abcdefABCDEF023FaF0f9D098a701246a763a54b537DD75C656018
+port: 2301
+channel: 23ab /tmp/cryptocomms/sockets/other_host
+max_size: 1000
+---EXAMPLE CONFIG FILE---
+
+[NOTE: the description of the config file format here is not complete yet]
+
+The functional content of the config file consists of config lines, which
+have the format
+<option-name>:<option-value>
+
+Blank lines and comment lines are ignored. A "blank line" is one that is
+empty or contains only whitespace, while a " comment line" is a line whose
+first non-whitespace character is "#". Whitespace at the beginning or end of
+a config line is ignored, so you can indent lines however you like.
+
+Config lines are grouped into "stanzas", with each stanza describing one host.
+A stanza starts with a config line with option-name "name", and ends at the
+start of the next stanza or the end of the file. The option-name "name" defines
+the name of the host. The name "self" is special, and marks the stanza with the
+config for the local host. A stanza for "self" is required.
+
+Before describing the options, note that several option values are byte strings
+given as hexadecimal strings. An byte string of length n is represented as a
+string of 2n hexadecimal characters in the usual way (with both uppercase and
+lowercase letters accepted).
+
+Each host is identified by a string of 4 bytes, which is given as the value of
+"id". Further, each stanza must list an ip address and port number. For "self"
+this is the ip and port on which to listen for traffic, while for remote hosts
+it is the place to send data packets.
+
+The "self" stanza requires, besides the "name" line, lines for "id", "ip", and
+"port". Other stanzas require these lines, as well as a "key" line, which gives
+a 32 byte secret key for communicating with that host, and one or more "channel"
+lines which define communication channels with that host.
+
+Each channel line has the format
+channel: <channel-id> <fifo-path>
+where <channel-id> is a two byte value identifying the channel (this must be the
+same for both hosts) and <fifo-path> is a file system path indicating where to find
+or create the FIFOs for this channel.
+
+The "self" stanza may include a line to set the "segment_number_file" option. This
+sets the location for the file where cryptocomms keeps a record of an internal
+"segment number counter" which is needed for cryptographic security. If this value
+is not set a default file name in the directory where cryptocomms is run will be used.
+[NOTE: need more on how to handle this properly]
+
+
+#######################
+# Running Cryptocomms #
+#######################
+
+To run Cryptocomms, prepare a configuration file as described above, and then run
+the cryptocomms binary with the path to the file as the only argument. Cryptocomms
+will create the FIFOs for all channels if they do not exist, and will also create
+a "segment number counter" file in either the current directory, or another location
+specified in the configuration file (see above for more on this file). Cryptocomms
+will then go into its main mode of operation, where it listens for data on a FIFO or
+from the network, and moves that data as appropriate.
+
+Other applications can use Cryptocomms to communicate as follows. Suppose that two
+hosts, A and B, both have Cryptocomms running, and are configured to communicate via
+a channel. There will be two FIFOs for the channel on each host, one for sending, whose
+name will have the suffix "_OUTWARD", and one for receiving, whose name will have the
+suffix "_INWARD". Let us suppose that the two FIFOS on A are "B_connection_OUTWARD" and
+"B_connection_INWARD", while the FIFOS on B are "A_connection_OUTWARD" and
+"A_connection_INWARD". Let us further suppose that there is a process Proc_A running on
+A and a process Proc_B running on B which need to communicate. Proc_A can open the FIFO
+B_connection_OUTWARD for writing, and Proc_B can open the FIFO A_connection_INWARD for
+reading. Anything written by Proc_A into its FIFO will then appear for reading at
+Proc_B's FIFO.

@@ -29,6 +29,7 @@ Connection::Connection(const host_id_type& self_id,
   udp_socket_(udp_socket),
   segnumgen_(segnumgen),
   crypto_unit_(key),
+  rtt_tracker_(std::make_shared<RTTTracker>()),
   fifo_from_user_(fifo_base_path+fifo_from_user_suffix),
   fifo_to_user_(fifo_base_path+fifo_to_user_suffix)
 {}

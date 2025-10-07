@@ -23,6 +23,7 @@
 #include "FifoIO.h"
 #include "SecretKey.h"
 #include "SegmentNumGenerator.h"
+#include "RTTTracker.h"
 #include "CryptoUnit.h"
 
 class Connection
@@ -56,6 +57,7 @@ private:
   std::shared_ptr<UDPSocket> udp_socket_;
   std::shared_ptr<SegmentNumGenerator> segnumgen_;
   CryptoUnit crypto_unit_;
+  std::shared_ptr<RTTTracker> rtt_tracker_;
 
   FifoFromUser fifo_from_user_;
   FifoToUser fifo_to_user_;

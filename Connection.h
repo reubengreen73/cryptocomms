@@ -23,6 +23,7 @@
 #include "FifoIO.h"
 #include "SecretKey.h"
 #include "SegmentNumGenerator.h"
+#include "CryptoUnit.h"
 
 class Connection
 {
@@ -54,6 +55,7 @@ private:
   unsigned int max_packet_size_;
   std::shared_ptr<UDPSocket> udp_socket_;
   std::shared_ptr<SegmentNumGenerator> segnumgen_;
+  CryptoUnit crypto_unit_;
 
   FifoFromUser fifo_from_user_;
   FifoToUser fifo_to_user_;

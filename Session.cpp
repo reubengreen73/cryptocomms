@@ -310,7 +310,7 @@ void Session::fifo_monitor_thread_func()
       /* Ensure that there is enough space in poll_fds for all of the file descriptors
          we might want to use. Note that this resize will never be called in the current
          code, as the list of Connections does not change during the Session's lifetime.
-         However, this will probably in the future, so we may as well cater for this now. */
+         However, this may change in the future, so we may as well cater for this now. */
       if(poll_fds.size() < monitor_fds_.size()+1){
         poll_fds.resize(monitor_fds_.size()+1);}
 

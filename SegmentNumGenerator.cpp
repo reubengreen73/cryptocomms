@@ -140,10 +140,11 @@ SegmentNumGenerator::SegmentNumGenerator(std::string path, unsigned int reserved
   /* Setting both next_num_ and new_reserve_needed_ to the same value will cause
    * reserve_nums() to be called on the first invocation of next_num(). This allows
    * set_reserve() to be called to set a better value for reserved_ before a
-   * reservation of numbers happens
+   * reservation of numbers happens. We do not use the segment number 0, as this
+   * value is used internally to indicate that a segement number has not been set.
    */
-  next_num_ = 0;
-  new_reserve_needed_ = 0;
+  next_num_ = 1;
+  new_reserve_needed_ = 1;
 }
 
 

@@ -17,8 +17,10 @@
 class SegmentNumGenerator
 {
 public:
+  typedef std::uint_least64_t segnum_t;
+
   SegmentNumGenerator(std::string path, unsigned int reserved = 1000);
-  std::uint_least64_t next_num();
+  segnum_t next_num();
   void set_reserved(unsigned int reserved);
 
   /* We explicitly delete the copy and move assignment/constructors. It
@@ -35,8 +37,8 @@ private:
   std::string path_;
   std::mutex lock_;
   unsigned int reserved_;
-  std::uint_least64_t next_num_;
-  std::uint_least64_t new_reserve_needed_;
+  segnum_t next_num_;
+  segnum_t new_reserve_needed_;
   void reserve_nums();
 };
 

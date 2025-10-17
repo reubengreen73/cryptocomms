@@ -6,9 +6,9 @@
 #include <set>
 #include <fstream>
 #include <iostream>
-#include <cstdint>
 
-void stress_test_segnumgen_uniqueness_thread_func(std::vector<std::uint_least64_t>& segnums, SegmentNumGenerator& sng)
+void stress_test_segnumgen_uniqueness_thread_func(std::vector<SegmentNumGenerator::segnum_t>& segnums,
+                                                  SegmentNumGenerator& sng)
 {
   for(int i = 0; i < 200; i++){
     segnums.push_back(sng.next_num());
@@ -24,7 +24,7 @@ void stress_test_segnumgen_uniqueness_thread_func(std::vector<std::uint_least64_
 TESTFUNC(SegmentNumGenerator_stress_test_segnumgen_uniqueness)
 {
   int num_threads = 20;
-  std::vector<std::vector<std::uint_least64_t>> segnum_vectors(num_threads);
+  std::vector<std::vector<SegmentNumGenerator::segnum_t>> segnum_vectors(num_threads);
 
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
@@ -56,12 +56,12 @@ TESTFUNC(SegmentNumGenerator_stress_test_segnumgen_uniqueness)
    * repeated.
    */
 
-  std::vector<std::uint_least64_t> all_segnums;
+  std::vector<SegmentNumGenerator::segnum_t> all_segnums;
   for(int i=0; i < num_threads; i++){
     all_segnums.insert(all_segnums.end(),segnum_vectors[i].begin(),segnum_vectors[i].end());
   }
 
-  std::set<std::uint_least64_t> all_segnums_set(all_segnums.begin(),all_segnums.end());
+  std::set<SegmentNumGenerator::segnum_t> all_segnums_set(all_segnums.begin(),all_segnums.end());
   TESTASSERT(all_segnums.size() == all_segnums_set.size());
 }
 

@@ -12,7 +12,7 @@ namespace
   /* our segment numbers are stored as unsigned 6 byte integers, so the maximum
    * value of a segment number is (2^48 - 1)
    */
-  constexpr std::uint_least64_t segnum_max = 281474976710655U;
+  constexpr SegmentNumGenerator::segnum_t segnum_max = 281474976710655U;
 
   /* get_saved_segnum() loads the stored segment number from the file. This number
    * is the highest segment number which could have been used by a previous run of the
@@ -23,7 +23,7 @@ namespace
    * to auto-create this file would weaken the effectiveness of recording which segment
    * numbers have been used.
    */
-  std::uint_least64_t get_saved_segnum(const std::string& path)
+  SegmentNumGenerator::segnum_t get_saved_segnum(const std::string& path)
   {
     std::ifstream segnum_file(path);
     if(!segnum_file){
@@ -64,7 +64,7 @@ namespace
   /* get_segnum_sysclock() generates a fresh segment number from the system clock, by computing
    * the number of milliseconds since the UNIX epoch.
    */
-  std::uint_least64_t get_segnum_sysclock()
+  SegmentNumGenerator::segnum_t get_segnum_sysclock()
   {
     auto now = std::chrono::system_clock::now();
     auto now_since_epoch = now.time_since_epoch();
@@ -88,10 +88,10 @@ namespace
    * save_segment() makes some effort to ensure that the file has been written to permanent
    * storage before returning.
    */
-  void save_segnum(std::uint_least64_t segnum, const std::string& path)
+  void save_segnum(SegmentNumGenerator::segnum_t segnum, const std::string& path)
   {
     std::string segnum_string = std::to_string(segnum);
-    std::uint_least64_t reread_segnum;
+    SegmentNumGenerator::segnum_t reread_segnum;
 
     /* In this loop, we try to write the new value to the file and check for
      * a successful write by reading the value back from the file, retrying
@@ -155,7 +155,7 @@ SegmentNumGenerator::SegmentNumGenerator(std::string path, unsigned int reserved
  * is (new_reserve_needed_ - 1), so the condition for calling reserve_nums() is
  * (next_num_ == new_reserve_needed_).
  */
-std::uint_least64_t SegmentNumGenerator::next_num()
+SegmentNumGenerator::segnum_t SegmentNumGenerator::next_num()
 {
 const std::lock_guard<std::mutex> guard_for_lock(lock_);
 
@@ -194,7 +194,7 @@ const std::lock_guard<std::mutex> guard_for_lock(lock_);
  */
 void SegmentNumGenerator::reserve_nums()
 {
-  std::uint_least64_t saved_segnum = get_saved_segnum(path_);
+  segnum_t saved_segnum = get_saved_segnum(path_);
 
   /* Generate a segment number from the system clock. We want to ensure that
    * this is a segment number that no previous run of the application could
@@ -204,7 +204,7 @@ void SegmentNumGenerator::reserve_nums()
    * reserve_nums() is called once at application start-up, and very infrequently
    * (if ever) thereafter (assuming reserved_ is set to a reasonable value).
    */
-  std::uint_least64_t base_sysclock_segnum, sysclock_segnum;
+  segnum_t base_sysclock_segnum, sysclock_segnum;
   sysclock_segnum = base_sysclock_segnum = get_segnum_sysclock();
   while(sysclock_segnum == base_sysclock_segnum){
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -215,7 +215,7 @@ void SegmentNumGenerator::reserve_nums()
    * numbers before another reserve_nums() call is needed
    */
   next_num_ = std::max(saved_segnum+1,sysclock_segnum);
-  std::uint_least64_t next_new_reserve_needed = next_num_ + reserved_;
+  segnum_t next_new_reserve_needed = next_num_ + reserved_;
   if(next_new_reserve_needed > segnum_max){
     throw std::runtime_error("SegmentNumGenerator: new upper segment number limit is too high");
   }

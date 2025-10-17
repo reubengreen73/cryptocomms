@@ -8,6 +8,7 @@
 #include <vector>
 #include <stdexcept>
 #include <memory>
+#include <array>
 #include <openssl/evp.h>
 
 #include "SecretKey.h"
@@ -19,6 +20,10 @@
 class CryptoUnit
 {
 public:
+  /* we only support the recommended iv length of 12 bytes, so we may as well make
+     a type to represent this */
+  typedef std::array<unsigned char,12> iv_t;
+
   CryptoUnit(const SecretKey& key);
 
   /* We do not want to allow copying, as there is no good way to do this, since we
@@ -31,10 +36,10 @@ public:
 
   std::vector<unsigned char> encrypt(const std::vector<unsigned char>& plaintext,
                                      const std::vector<unsigned char>& additional,
-				     const std::vector<unsigned char>& iv);
+				     iv_t iv);
   std::vector<unsigned char> decrypt(std::vector<unsigned char>& tagged_ciphertext,
                                      const std::vector<unsigned char>& additional,
-				     const std::vector<unsigned char>& iv, bool& good_tag);
+				     iv_t iv, bool& good_tag);
 
 private:
   /* CryptoUnitDeleter is used to customize the behaviour of the unique_ptrs holding

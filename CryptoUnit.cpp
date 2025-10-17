@@ -46,7 +46,7 @@ CryptoUnit::CryptoUnit(const SecretKey& key)
  */
 std::vector<unsigned char> CryptoUnit::encrypt(const std::vector<unsigned char>& plaintext,
                                                const std::vector<unsigned char>& additional,
-                                               const std::vector<unsigned char>& iv)
+                                               iv_t iv)
 {
   // set the encryption context's iv
   if(1 != EVP_EncryptInit_ex(enc_cipher_ctx.get(), NULL, NULL, NULL, iv.data()))
@@ -153,7 +153,7 @@ std::vector<unsigned char> CryptoUnit::encrypt(const std::vector<unsigned char>&
  */
 std::vector<unsigned char> CryptoUnit::decrypt(std::vector<unsigned char>& ciphertext_and_tag,
                                                const std::vector<unsigned char>& additional,
-					       const std::vector<unsigned char>& iv, bool& good_tag)
+					       iv_t iv, bool& good_tag)
 {
   // set the decryption context's iv
   if(1 != EVP_DecryptInit_ex(dec_cipher_ctx.get(), NULL, NULL, NULL, iv.data())){

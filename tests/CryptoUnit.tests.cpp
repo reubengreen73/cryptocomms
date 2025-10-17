@@ -53,8 +53,13 @@ void run_test_vector(const std::string& key_str,
 
   bytes_t plaintext = bytes_from_hex_string(plaintext_str);
   bytes_t additional = bytes_from_hex_string(additional_str);
-  bytes_t iv = bytes_from_hex_string(iv_str);
+  bytes_t iv_bytes = bytes_from_hex_string(iv_str);
   bytes_t tagged_ciphertext = bytes_from_hex_string(ciphertext_str+tag_str);
+
+  CryptoUnit::iv_t iv;
+  for(CryptoUnit::iv_t::size_type i=0; i<iv.size(); i++){
+    iv[i] = iv_bytes[i];
+  }
 
   bytes_t trial_tagged_ciphertext = crypto_unit.encrypt(plaintext,
                                                         additional,
@@ -63,7 +68,7 @@ void run_test_vector(const std::string& key_str,
   bool tag_valid;
   bytes_t trial_plaintext = crypto_unit.decrypt(tagged_ciphertext,
                                                 additional,
-                                                iv,tag_valid);
+                                                iv, tag_valid);
 
   TESTASSERT(trial_tagged_ciphertext == tagged_ciphertext);
   TESTASSERT(tag_valid);
@@ -84,8 +89,13 @@ void check_tamper_detected(const std::string& key_str,
   typedef std::vector<unsigned char> bytes_t;
 
   bytes_t additional = bytes_from_hex_string(additional_str);
-  bytes_t iv = bytes_from_hex_string(iv_str);
+  bytes_t iv_bytes = bytes_from_hex_string(iv_str);
   bytes_t tagged_ciphertext = bytes_from_hex_string(ciphertext_str+tag_str);
+
+  CryptoUnit::iv_t iv;
+  for(CryptoUnit::iv_t::size_type i=0; i<iv.size(); i++){
+    iv[i] = iv_bytes[i];
+  }
 
   bool tag_valid;
   bytes_t trial_plaintext = crypto_unit.decrypt(tagged_ciphertext,

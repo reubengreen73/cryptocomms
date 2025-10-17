@@ -6,6 +6,8 @@
 #include "../CryptoMessageTracker.h"
 #include "../RTTTracker.h"
 
+typedef CryptoMessageTracker::msgnum_t msgnum_t;
+
 /* check a small set set of message numbers can be logged and recalled correctly */
 TESTFUNC(CryptoMessageTracker_check_few_msgnums)
 {
@@ -14,7 +16,7 @@ TESTFUNC(CryptoMessageTracker_check_few_msgnums)
 
   CryptoMessageTracker cmt(rtt_tracker);
 
-  std::vector<msgnum_int_t> nums{
+  std::vector<msgnum_t> nums{
     0,1,2,3,4,5,6,7,8,9,10,11,12,
     15,17,19,20,21,24,25,
     50,55,56,61,62,63,68,70,73,74,75,79,80,
@@ -30,17 +32,17 @@ TESTFUNC(CryptoMessageTracker_check_few_msgnums)
     281474976710655 // (2^48 - 1), maximum message number
   };
 
-  for(msgnum_int_t n : nums){
+  for(msgnum_t n : nums){
     TESTASSERT(not cmt.have_seen_msgnum(n));
   }
 
-  for(msgnum_int_t n : nums){
+  for(msgnum_t n : nums){
     TESTASSERT(not cmt.have_seen_msgnum(n));
     cmt.log_msgnum(n);
     TESTASSERT(cmt.have_seen_msgnum(n));
   }
 
-  for(msgnum_int_t n : nums){
+  for(msgnum_t n : nums){
     TESTASSERT(cmt.have_seen_msgnum(n));
   }
 }
@@ -56,17 +58,17 @@ TESTFUNC(CryptoMessageTracker_test_range)
 
   unsigned int length = 1000000;
 
-  for(msgnum_int_t n=0; n < length; n++){
+  for(msgnum_t n=0; n < length; n++){
     TESTASSERT(not cmt.have_seen_msgnum(n));
   }
 
-  for(msgnum_int_t n=0; n < length; n++){
+  for(msgnum_t n=0; n < length; n++){
     TESTASSERT(not cmt.have_seen_msgnum(n));
     cmt.log_msgnum(n);
     TESTASSERT(cmt.have_seen_msgnum(n));
   }
 
-  for(msgnum_int_t n=0; n < length; n++){
+  for(msgnum_t n=0; n < length; n++){
     TESTASSERT(cmt.have_seen_msgnum(n));
   }
 }
@@ -80,21 +82,21 @@ TESTFUNC(CryptoMessageTracker_test_spatter)
 
   CryptoMessageTracker cmt(rtt_tracker);
 
-  std::vector<msgnum_int_t> nums{
+  std::vector<msgnum_t> nums{
     1000,990,1011,999,1005,1031,991,992,993,1007,
     1027,985,1026,984,986,1001,1002,997,1030,998
   };
 
-  for(msgnum_int_t n : nums){
+  for(msgnum_t n : nums){
     TESTASSERT(not cmt.have_seen_msgnum(n));
   }
 
-  for(msgnum_int_t n : nums){
+  for(msgnum_t n : nums){
     cmt.log_msgnum(n);
     TESTASSERT(cmt.have_seen_msgnum(n));
   }
 
-  for(msgnum_int_t n : nums){
+  for(msgnum_t n : nums){
     TESTASSERT(cmt.have_seen_msgnum(n));
   }
 }
@@ -109,23 +111,23 @@ TESTFUNC(CryptoMessageTracker_test_3_5_7_multiples)
 
   CryptoMessageTracker cmt(rtt_tracker);
 
-  std::vector<msgnum_int_t> nums;
+  std::vector<msgnum_t> nums;
   for(int i=1;i<106000;i++){
     if( (i%3 == 0) or (i%5 == 0) or (i%7 == 0) ){
       nums.push_back(i);
     }
   }
 
-  for(msgnum_int_t n : nums){
+  for(msgnum_t n : nums){
     TESTASSERT(not cmt.have_seen_msgnum(n));
   }
 
-  for(msgnum_int_t n : nums){
+  for(msgnum_t n : nums){
     cmt.log_msgnum(n);
     TESTASSERT(cmt.have_seen_msgnum(n));
   }
 
-  for(msgnum_int_t n : nums){
+  for(msgnum_t n : nums){
     TESTASSERT(cmt.have_seen_msgnum(n));
   }
 }
@@ -145,14 +147,14 @@ TESTFUNC(CryptoMessageTracker_check_exact_results)
   CryptoMessageTracker cmt(rtt_tracker);
 
   // these variables will be captured by reference by the lambdas defined below
-  std::vector<msgnum_int_t> all_msgnums_logged; // list of all the message numbers logged
-  msgnum_int_t msgnum_bound, range_limit;
+  std::vector<msgnum_t> all_msgnums_logged; // list of all the message numbers logged
+  msgnum_t msgnum_bound, range_limit;
 
   /* function to check that have_seen_msgnum() returns true if and only if a message number
      has been logged */
   auto check_all_logged_msgnums = [&]()
   {
-    for(msgnum_int_t n = msgnum_bound; n<(range_limit+CryptoMessageTracker::block_size); n++){
+    for(msgnum_t n = msgnum_bound; n<(range_limit+CryptoMessageTracker::block_size); n++){
       if( std::find(all_msgnums_logged.begin(),all_msgnums_logged.end(),n) ==
           all_msgnums_logged.end() ){
         TESTASSERT(not cmt.have_seen_msgnum(n));
@@ -165,9 +167,9 @@ TESTFUNC(CryptoMessageTracker_check_exact_results)
 
   /* function to log a vector of message numbers with checks that have_seen_msgnum()
      behaves as it should */
-  auto log_msgnums = [&](const std::vector<msgnum_int_t>& nums)
+  auto log_msgnums = [&](const std::vector<msgnum_t>& nums)
   {
-    for(msgnum_int_t n : nums){
+    for(msgnum_t n : nums){
       if( std::find(all_msgnums_logged.begin(),all_msgnums_logged.end(),n) ==
           all_msgnums_logged.end() ){
         TESTASSERT(not cmt.have_seen_msgnum(n));
@@ -182,8 +184,8 @@ TESTFUNC(CryptoMessageTracker_check_exact_results)
      lists of message numbers to log */
   auto get_multiples = [&](unsigned int f)
   {
-    std::vector<msgnum_int_t> nums;
-    for(msgnum_int_t n=msgnum_bound+15;n<range_limit-15;n++){
+    std::vector<msgnum_t> nums;
+    for(msgnum_t n=msgnum_bound+15;n<range_limit-15;n++){
       if(n%f == 0){
         nums.push_back(n);
       }
@@ -195,12 +197,12 @@ TESTFUNC(CryptoMessageTracker_check_exact_results)
   /* the actual test code starts here */
 
   /* the numbers calculated here are as described in CryptoMessageTracker.h */
-  msgnum_int_t msgnum_highest =
+  msgnum_t msgnum_highest =
     (CryptoMessageTracker::max_blocks + 1)*CryptoMessageTracker::block_size +
     (CryptoMessageTracker::max_blocks/2);
-  msgnum_int_t x = (CryptoMessageTracker::max_blocks + 2)*CryptoMessageTracker::block_size;
-  msgnum_int_t y = x - (CryptoMessageTracker::block_size*CryptoMessageTracker::max_blocks);
-  msgnum_int_t z = y + CryptoMessageTracker::max_blocks/2;
+  msgnum_t x = (CryptoMessageTracker::max_blocks + 2)*CryptoMessageTracker::block_size;
+  msgnum_t y = x - (CryptoMessageTracker::block_size*CryptoMessageTracker::max_blocks);
+  msgnum_t z = y + CryptoMessageTracker::max_blocks/2;
   msgnum_bound = y;
 
   /* the highest number we shall check when we check through the numbers to see if they
@@ -221,7 +223,7 @@ TESTFUNC(CryptoMessageTracker_check_exact_results)
   }
 
   /* test that things work correctly at the ends of the window */
-  std::vector<msgnum_int_t> end_nums = {
+  std::vector<msgnum_t> end_nums = {
     msgnum_bound,range_limit-1,msgnum_bound+1,range_limit-2,
     msgnum_bound+7,msgnum_bound+5,range_limit-8,range_limit-6,
     msgnum_bound+10,range_limit-13,msgnum_bound+12,range_limit-11
@@ -231,7 +233,7 @@ TESTFUNC(CryptoMessageTracker_check_exact_results)
 
   /* check that the above-added message numbers are recalled correctly after
      the message number window moves */
-  msgnum_int_t block_offset = CryptoMessageTracker::block_size*3;
+  msgnum_t block_offset = CryptoMessageTracker::block_size*3;
   log_msgnums({msgnum_highest+block_offset});
   msgnum_bound += block_offset;
   range_limit += block_offset;
@@ -247,14 +249,14 @@ TESTFUNC(CryptoMessageTracker_reset)
 
   CryptoMessageTracker cmt(rtt_tracker);
 
-  for(msgnum_int_t n=0; n<(CryptoMessageTracker::block_size*10); n++){
+  for(msgnum_t n=0; n<(CryptoMessageTracker::block_size*10); n++){
     cmt.log_msgnum(n);
     TESTASSERT(cmt.have_seen_msgnum(n));
   }
 
   cmt.reset();
 
-  for(msgnum_int_t n=0; n<(CryptoMessageTracker::block_size*10); n++){
+  for(msgnum_t n=0; n<(CryptoMessageTracker::block_size*10); n++){
     TESTASSERT(not cmt.have_seen_msgnum(n));
   }
 }

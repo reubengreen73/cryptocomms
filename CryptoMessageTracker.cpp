@@ -12,7 +12,7 @@
    std::vector<std::pair<unsigned int,millis_timestamp_t>> block_records_
    std::vector<bool> msg_records_
    unsigned int current_block_
-   msgnum_int_t base_msgnum_
+   msgnum_t base_msgnum_
  msg_records_ is used to implement a ring buffer to store booleans, each of
  which records whether one message has been logged (via log_msgnum() ) or not.
  msg_records_ starts out with size one block, but if large volumes of message
@@ -91,7 +91,7 @@ void CryptoMessageTracker::reset()
  * See the comment at the top of CryptoMessageTracker.h for a detailed description
  * of how this function behaves.
  */
-bool CryptoMessageTracker::have_seen_msgnum(msgnum_int_t msgnum)
+bool CryptoMessageTracker::have_seen_msgnum(msgnum_t msgnum)
 {
   /* if msgnum is below base_msgnum_ then any record we might have had of it has
      been discarded, so we must assume it's been seen */
@@ -115,7 +115,7 @@ bool CryptoMessageTracker::have_seen_msgnum(msgnum_int_t msgnum)
  * the window of message numbers for which a record is kept, or growing the vectors
  * msg_records_ and block_records_. See DESIGN above for more information.
  */
-void CryptoMessageTracker::log_msgnum(msgnum_int_t msgnum)
+void CryptoMessageTracker::log_msgnum(msgnum_t msgnum)
 {
   // if msgnum is below base_msgnum_, we cannot make a record for it
   if(msgnum < base_msgnum_){
@@ -163,7 +163,7 @@ void CryptoMessageTracker::log_msgnum(msgnum_int_t msgnum)
  * of that message number's record in msgnum_records_. This method assumes that
  * msgnum is in range [ base_msgnum_, base_msgnum_+msg_records_.size() )
  */
-std::vector<bool>::size_type CryptoMessageTracker::records_pos(msgnum_int_t msgnum)
+std::vector<bool>::size_type CryptoMessageTracker::records_pos(msgnum_t msgnum)
 {
   std::uint_least64_t msgnum_offset = msgnum - base_msgnum_;
   std::uint_least64_t msg_records_offset = (block_size*current_block_);

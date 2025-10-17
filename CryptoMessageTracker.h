@@ -46,14 +46,14 @@
 
 #include "RTTTracker.h"
 
-/* We use uint_least64_t to store message numbers, as this ensures that there is room
- * for 48 bits (i.e. six bytes)
- */
-typedef std::uint_least64_t msgnum_int_t;
-
 class CryptoMessageTracker
 {
 public:
+  /* We use uint_least64_t to store message numbers, as this ensures that there is room
+   * for 48 bits (i.e. six bytes)
+   */
+  typedef std::uint_least64_t msgnum_t;
+
   /* The values block_size and max_blocks are public members because they feature in the
    * above-mentioned guarantees of which message numbers can have their status recalled
    * exactly.
@@ -63,8 +63,8 @@ public:
 
   CryptoMessageTracker(const std::shared_ptr<RTTTracker>& rtt_tracker);
   void reset();
-  bool have_seen_msgnum(msgnum_int_t msgnum);
-  void log_msgnum(msgnum_int_t msgnum);
+  bool have_seen_msgnum(msgnum_t msgnum);
+  void log_msgnum(msgnum_t msgnum);
 
 private:
   /* Note the use of different types for arguments and return values below when
@@ -75,7 +75,7 @@ private:
    * std::uint_least64_t is used to ensure any block number can be represented.
    */
   typedef std::uint_least64_t millis_timestamp_t;
-  std::vector<bool>::size_type records_pos(msgnum_int_t msgnum);
+  std::vector<bool>::size_type records_pos(msgnum_t msgnum);
   unsigned int how_many_extra_blocks(std::uint_least64_t num_blocks_forward,
                                      millis_timestamp_t millis_since_epoch,
                                      unsigned long int current_rtt);
@@ -91,7 +91,7 @@ private:
   std::vector<std::pair<unsigned int,millis_timestamp_t>> block_records_;
   std::vector<bool> msg_records_;
   unsigned int current_block_;
-  msgnum_int_t base_msgnum_;
+  msgnum_t base_msgnum_;
 };
 
 #endif

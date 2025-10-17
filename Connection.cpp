@@ -2,10 +2,13 @@
 
 #include <poll.h>
 
-/* suffixes for the file names of the FIFOs where data goes in and out of the program
-   these should eventually become user-settable */
-constexpr char fifo_from_user_suffix[] = "_OUTWARD";
-constexpr char fifo_to_user_suffix[] = "_INWARD";
+namespace
+{
+  /* suffixes for the file names of the FIFOs where data goes in and out of the program
+     these should eventually become user-settable */
+  constexpr char fifo_from_user_suffix[] = "_OUTWARD";
+  constexpr char fifo_to_user_suffix[] = "_INWARD";
+}
 
 
 Connection::Connection(const host_id_type& self_id,

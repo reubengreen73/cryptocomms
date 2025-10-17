@@ -12,6 +12,7 @@
 #include <string>
 #include <array>
 #include <memory>
+#include <fstream>
 
 #include <string.h>
 #include <arpa/inet.h>
@@ -87,7 +88,14 @@ ConnectionAndFDs create_connection()
   }
   conn_fds.socket_fd_bound_port = ntohs(bind_addr.sin_port);
 
-  /* 2 - make the Connection */
+  /* 2 - create the segment number file */
+  std::string segnumfile_name("segnumfile");
+  std::string segnum_string("0");
+  std::ofstream segnum_file(segnumfile_name,std::ios::out);
+  segnum_file << segnum_string;
+  segnum_file.close();
+
+  /* 3 - make the Connection */
 
   /* parameters for the Connection */
   host_id_type self_id = {0x01,0x4a,0x72,0xb1};
@@ -101,7 +109,7 @@ ConnectionAndFDs create_connection()
   std::shared_ptr<UDPSocket> udp_socket =
     std::make_shared<UDPSocket>("127.0.0.1",0);
   std::shared_ptr<SegmentNumGenerator> segnumgen =
-    std::make_shared<SegmentNumGenerator>("segnumfile",1);
+    std::make_shared<SegmentNumGenerator>(segnumfile_name,1);
 
   conn_fds.conn = std::make_unique<Connection>(self_id,
                                                peer_name,
@@ -115,7 +123,7 @@ ConnectionAndFDs create_connection()
                                                udp_socket,
                                                segnumgen);
 
-  /* 3 - open the Connection's fifos
+  /* 4 - open the Connection's fifos
    * Note that the literal strings "_OUTWARD" and "_INWARD" need to be kept in sync
    * with the values in Connection.cpp (this is not good and should probably be fixed
    * somehow).

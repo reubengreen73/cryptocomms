@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <thread>
+#include <fstream>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -47,6 +48,12 @@ SessionAndFDs make_session(const host_id_type& self_id,
                            const std::string& segnum_file_path,
                            unsigned int num_connection_workers)
 {
+  /* create the segment number file */
+  std::string segnum_string("0");
+  std::ofstream segnum_file(segnum_file_path,std::ios::out);
+  segnum_file << segnum_string;
+  segnum_file.close();
+
   SessionAndFDs session_and_fds;
   session_and_fds.sess = std::make_unique<Session>(self_id, self_ip_addr, self_port,
                                                    default_max_packet_size, peer_configs,

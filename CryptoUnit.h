@@ -34,12 +34,17 @@ public:
   CryptoUnit (const CryptoUnit&) = delete;
   CryptoUnit& operator= (const CryptoUnit&) = delete;
 
-  std::vector<unsigned char> encrypt(const std::vector<unsigned char>& plaintext,
+  void encrypt(const std::vector<unsigned char>& plaintext,
+               const std::vector<unsigned char>& additional,
+               const iv_t& iv,
+               std::vector<unsigned char>& dest,
+               std::vector<unsigned char>::size_type dest_offset);
+  std::vector<unsigned char> decrypt(const std::vector<unsigned char>& ciphertext_and_tag,
                                      const std::vector<unsigned char>& additional,
-				     iv_t iv);
-  std::vector<unsigned char> decrypt(std::vector<unsigned char>& tagged_ciphertext,
-                                     const std::vector<unsigned char>& additional,
-				     iv_t iv, bool& good_tag);
+				     const iv_t& iv,
+                                     std::vector<unsigned char>::size_type offset,
+                                     std::vector<unsigned char>::size_type length,
+                                     bool& good_tag);
 
 private:
   /* CryptoUnitDeleter is used to customize the behaviour of the unique_ptrs holding

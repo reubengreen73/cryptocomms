@@ -44,7 +44,8 @@ void run_test_vector(const std::string& key_str,
                      const std::string& additional_str,
                      const std::string& iv_str,
                      const std::string& ciphertext_str,
-                     const std::string& tag_str)
+                     const std::string& tag_str,
+                     unsigned int ciphertext_offset = 0)
 {
   SecretKey secret_key(key_str);
   CryptoUnit crypto_unit(key_str);
@@ -54,21 +55,26 @@ void run_test_vector(const std::string& key_str,
   bytes_t plaintext = bytes_from_hex_string(plaintext_str);
   bytes_t additional = bytes_from_hex_string(additional_str);
   bytes_t iv_bytes = bytes_from_hex_string(iv_str);
-  bytes_t tagged_ciphertext = bytes_from_hex_string(ciphertext_str+tag_str);
+  bytes_t tagged_ciphertext =
+    bytes_from_hex_string(std::string(2*ciphertext_offset,'0') +
+                          ciphertext_str+tag_str);
 
   CryptoUnit::iv_t iv;
   for(CryptoUnit::iv_t::size_type i=0; i<iv.size(); i++){
     iv[i] = iv_bytes[i];
   }
 
-  bytes_t trial_tagged_ciphertext = crypto_unit.encrypt(plaintext,
-                                                        additional,
-                                                        iv);
+  bytes_t trial_tagged_ciphertext(ciphertext_offset+plaintext.size()+16);
+  crypto_unit.encrypt(plaintext, additional, iv,
+                      trial_tagged_ciphertext,ciphertext_offset);
 
   bool tag_valid;
   bytes_t trial_plaintext = crypto_unit.decrypt(tagged_ciphertext,
                                                 additional,
-                                                iv, tag_valid);
+                                                iv,
+                                                ciphertext_offset,
+                                                plaintext.size()+16,
+                                                tag_valid);
 
   TESTASSERT(trial_tagged_ciphertext == tagged_ciphertext);
   TESTASSERT(tag_valid);
@@ -100,7 +106,9 @@ void check_tamper_detected(const std::string& key_str,
   bool tag_valid;
   bytes_t trial_plaintext = crypto_unit.decrypt(tagged_ciphertext,
                                                 additional,
-                                                iv,tag_valid);
+                                                iv,
+                                                0,tagged_ciphertext.size(),
+                                                tag_valid);
 
   TESTASSERT(not tag_valid);
   TESTASSERT(trial_plaintext == bytes_t());
@@ -269,4 +277,23 @@ TESTFUNC(CryptoUnit_McGrew_Viega_16)
   bad_additional_str_3[7] = 'b';
   check_tamper_detected(key_str, bad_additional_str_3, iv_str, ciphertext_str,
                         tag_str);
+}
+
+
+/* test the feature of CryptoUnit::encrypt and ::decrypt which allows the ciphertext
+   and tag to be written/read at an offset in the vector of bytes */
+TESTFUNC(CryptoUnit_offset)
+{
+  // test vector as for McGrew_Viega_13 above
+  std::string key_str = "00000000000000000000000000000000"\
+                        "00000000000000000000000000000000";
+  std::string plaintext_str = "";
+  std::string additional_str = "";
+  std::string iv_str = "000000000000000000000000";
+  std::string ciphertext_str = "";
+  std::string tag_str = "530f8afbc74536b9a963b4f1c4cb738b";
+
+  // run the test, with a ciphertext offset of 17
+  run_test_vector(key_str,plaintext_str,additional_str,
+                  iv_str,ciphertext_str,tag_str,17);
 }

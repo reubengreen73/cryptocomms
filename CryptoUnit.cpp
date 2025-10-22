@@ -39,20 +39,20 @@ CryptoUnit::CryptoUnit(const SecretKey& key)
 }
 
 
-/* CryptoUnit::encrypt() returns the encrypted ciphertext and authentication tag created from
- * the plaintext in the argument "plaintext", with the CryptoUnit's key, the initialization vector
- * in the argument "iv", and the additional data in the argument "additional". The AEAD tag is
- * appended to the end of the returned plaintext.
+/* CryptoUnit::encrypt() computes the encryption of the argument "plaintext" using the
+ * CryptoUnit's key, with the given iv and additional data. The ciphertext and AEAD tag
+ * are written to "dest" at offset "dest_offset" (the AEAD tag is written after the
+ * ciphertext).
  */
-std::vector<unsigned char> CryptoUnit::encrypt(const std::vector<unsigned char>& plaintext,
-                                               const std::vector<unsigned char>& additional,
-                                               iv_t iv)
+void CryptoUnit::encrypt(const std::vector<unsigned char>& plaintext,
+                         const std::vector<unsigned char>& additional,
+                         const iv_t& iv,
+                         std::vector<unsigned char>& dest,
+                         std::vector<unsigned char>::size_type dest_offset)
 {
   // set the encryption context's iv
   if(1 != EVP_EncryptInit_ex(enc_cipher_ctx.get(), NULL, NULL, NULL, iv.data()))
     throw std::runtime_error("CryptoUnit: EVP_EncryptInit_ex failed to set iv");
-
-  std::vector<unsigned char> ciphertext_and_tag(plaintext.size()+16);
 
   /* We add the additional data to the encryption context, and then encrypt the data. Both
    * of these operations are done via calls to EVP_EncryptUpdate(), and OpenSSL requires that
@@ -96,7 +96,7 @@ std::vector<unsigned char> CryptoUnit::encrypt(const std::vector<unsigned char>&
     int processing_result = doing_additional ?
       EVP_EncryptUpdate(enc_cipher_ctx.get(), NULL, &len_out, &additional.at(total_done),
                         additional.size()-total_done) :
-      EVP_EncryptUpdate(enc_cipher_ctx.get(), &ciphertext_and_tag.at(total_done), &len_out,
+      EVP_EncryptUpdate(enc_cipher_ctx.get(), &dest.at(dest_offset+total_done), &len_out,
                         &plaintext.at(total_done), plaintext.size()-total_done);
 
     if(1 != processing_result){
@@ -124,17 +124,19 @@ std::vector<unsigned char> CryptoUnit::encrypt(const std::vector<unsigned char>&
 
   /* append the AEAD tag to the ciphertext */
   if(1 != EVP_CIPHER_CTX_ctrl(enc_cipher_ctx.get(), EVP_CTRL_GCM_GET_TAG, 16,
-			      &ciphertext_and_tag.at(plaintext.size()))){
+			      &dest.at(dest_offset+plaintext.size()))){
     throw std::runtime_error("CryptoUnit: EVP_CIPHER_CTX_ctrl failed to get tag from encryption");
   }
 
-  return ciphertext_and_tag;
 }
 
 
-/* CryptoUnit::decrypt() authenticates and decrypts the ciphertext and AEAD tag in
- * ciphertext_and_tag, using the CryptoUnit's key and the initialization vector iv. The
- * pass-by-reference parameter good_tag is used to indicate whether the AEAD authentication
+/* CryptoUnit::decrypt() authenticates and decrypts the ciphertext and AEAD tag
+ * which begins at offset src_offset in ciphertext_and_tag and has length "length"
+ * bytes (including the AEAD tag). The authentication and decryption use CryptoUnit's key,
+ * the initialization vector iv, and the additional data in "additional".
+ *
+ * The pass-by-reference parameter good_tag is used to indicate whether the AEAD authentication
  * tag was valid. Callers should always check this bool on return. If good_tag is true, the
  * tag was valid and the returned value is the decrypted plaintext. If good_tag is false,
  * then the tag was invalid and the returned value is an empty vector. In the latter case,
@@ -144,23 +146,20 @@ std::vector<unsigned char> CryptoUnit::encrypt(const std::vector<unsigned char>&
  * and error, since it is to be expected that attackers might send fraudulent ciphertexts.
  * The creation of an empty vector as a return value in the case of an invalid tag is reasonable,
  * since creating an empty vector is very cheap.
- *
- * Note that the ciphertext_and_tag parameter is not const. This is to allows part of it to be
- * passed directly to EVP_CIPHER_CTX_ctrl() as the AEAD tag. I don't think that this call can
- * modify the vector, but it seems best (and most efficient) to just make the parameter non-const,
- * rather than casting away const or making a copy. I don't think that ciphertext_and_tag would
- * be used after calling this function, so it would not be a problem even if we did modify it.
  */
-std::vector<unsigned char> CryptoUnit::decrypt(std::vector<unsigned char>& ciphertext_and_tag,
+std::vector<unsigned char> CryptoUnit::decrypt(const std::vector<unsigned char>& ciphertext_and_tag,
                                                const std::vector<unsigned char>& additional,
-					       iv_t iv, bool& good_tag)
+                                               const iv_t& iv,
+                                               std::vector<unsigned char>::size_type src_offset,
+                                               std::vector<unsigned char>::size_type length,
+                                               bool& good_tag)
 {
   // set the decryption context's iv
   if(1 != EVP_DecryptInit_ex(dec_cipher_ctx.get(), NULL, NULL, NULL, iv.data())){
     throw std::runtime_error("CryptoUnit: EVP_DecryptInit_ex failed to set iv");
   }
 
-  int ciphertext_size = ciphertext_and_tag.size()-16;
+  int ciphertext_size = length-16;
   std::vector<unsigned char> plaintext(ciphertext_size);
 
   /* We add the additional data to the decryption context, and then perform the decryption.
@@ -196,7 +195,7 @@ std::vector<unsigned char> CryptoUnit::decrypt(std::vector<unsigned char>& ciphe
       EVP_DecryptUpdate(dec_cipher_ctx.get(), NULL, &len_out, &additional.at(total_done),
                         additional.size()-total_done) :
       EVP_DecryptUpdate(dec_cipher_ctx.get(), &plaintext.at(total_done), &len_out,
-                        &ciphertext_and_tag.at(total_done), ciphertext_size-total_done);
+                        &ciphertext_and_tag.at(src_offset+total_done), ciphertext_size-total_done);
 
     if(1 != processing_result){
       throw std::runtime_error("CryptoUnit: EVP_DecryptUpdate failed");
@@ -211,8 +210,9 @@ std::vector<unsigned char> CryptoUnit::decrypt(std::vector<unsigned char>& ciphe
   }
 
   /* pass the AEAD tag to dec_cipher_ctx for checking below */
-  if(1 != EVP_CIPHER_CTX_ctrl(dec_cipher_ctx.get(), EVP_CTRL_GCM_SET_TAG, 16,
-                              &ciphertext_and_tag.at(ciphertext_size))){
+  unsigned char* tag_start =
+    const_cast<unsigned char*>(&ciphertext_and_tag.at(src_offset+ciphertext_size));
+  if(1 != EVP_CIPHER_CTX_ctrl(dec_cipher_ctx.get(), EVP_CTRL_GCM_SET_TAG, 16, tag_start)){
     throw std::runtime_error("CryptoUnit: EVP_CIPHER_CTX_ctrl failed to set the tag for decryption");
   }
 

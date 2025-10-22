@@ -57,10 +57,10 @@ DBG := -g
 CHECKS := -Wall -Wpedantic
 
 
+all: cryptocomms tester
+
 clean:
 	rm *.o cryptocomms tester tester.cpp
-
-all: cryptocomms tester
 
 
 ## Rules for the cryptocomms executable and the tester ##

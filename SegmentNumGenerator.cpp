@@ -37,7 +37,7 @@ namespace
                                +path);
     }
 
-    unsigned long long int saved_segnum;
+    SegmentNumGenerator::segnum_t saved_segnum;
     try{
       saved_segnum = std::stoull(saved_segnum_string);
     } catch (const std::exception& ex) {
@@ -68,7 +68,7 @@ namespace
   {
     auto now = std::chrono::system_clock::now();
     auto now_since_epoch = now.time_since_epoch();
-    unsigned long long int millis_since_epoch =
+    SegmentNumGenerator::segnum_t millis_since_epoch =
       std::chrono::duration_cast<std::chrono::milliseconds>(now_since_epoch).count();
     if(millis_since_epoch > segnum_max){
       /* We check that the number of milliseconds since the epoch is at most

@@ -45,6 +45,7 @@
 #include <utility>
 
 #include "RTTTracker.h"
+#include "EpochTime.h"
 
 class CryptoMessageTracker
 {
@@ -74,7 +75,6 @@ private:
    * of _logical blocks_, i.e. chunks of the 48-bit space of message numbers,
    * std::uint_least64_t is used to ensure any block number can be represented.
    */
-  typedef std::uint_least64_t millis_timestamp_t;
   std::vector<bool>::size_type records_pos(msgnum_t msgnum);
   unsigned int how_many_extra_blocks(std::uint_least64_t num_blocks_forward,
                                      millis_timestamp_t millis_since_epoch,

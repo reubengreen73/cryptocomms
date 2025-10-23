@@ -5,6 +5,7 @@
 #include <thread>
 #include <fstream>
 
+#include "EpochTime.h"
 
 namespace
 {
@@ -66,10 +67,7 @@ namespace
    */
   SegmentNumGenerator::segnum_t get_segnum_sysclock()
   {
-    auto now = std::chrono::system_clock::now();
-    auto now_since_epoch = now.time_since_epoch();
-    SegmentNumGenerator::segnum_t millis_since_epoch =
-      std::chrono::duration_cast<std::chrono::milliseconds>(now_since_epoch).count();
+    millis_timestamp_t millis_since_epoch = epoch_time_millis();
     if(millis_since_epoch > segnum_max){
       /* We check that the number of milliseconds since the epoch is at most
        * segnum_max. The actual number of milliseconds since the epoch will not

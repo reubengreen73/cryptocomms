@@ -2,7 +2,6 @@
 
 #include <stdexcept>
 #include <algorithm>
-#include <chrono>
 
 /* DESIGN
  This is a discussion of the internal implementation of CryptoMessageTracker.
@@ -123,10 +122,7 @@ void CryptoMessageTracker::log_msgnum(msgnum_t msgnum)
   }
 
   // get the number of milliseconds since the epoch
-  auto now = std::chrono::system_clock::now();
-  auto now_since_epoch = now.time_since_epoch();
-  millis_timestamp_t millis_since_epoch =
-    std::chrono::duration_cast<std::chrono::milliseconds>(now_since_epoch).count();
+  millis_timestamp_t millis_since_epoch = epoch_time_millis();
 
   /* if msgnum is beyond the current upper limit of the window of message numbers,
      we need to move the window */

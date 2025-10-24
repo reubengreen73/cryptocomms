@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <netinet/in.h> // for in_port_t
+#include <utility>
 
 #include "IDTypes.h"
 #include "UDPSocket.h"
@@ -25,6 +26,7 @@
 #include "SegmentNumGenerator.h"
 #include "RTTTracker.h"
 #include "CryptoUnit.h"
+#include "EpochTime.h"
 
 class Connection
 {
@@ -45,6 +47,7 @@ public:
   void add_message(const ReceivedUDPMessage& msg);
   void add_message(ReceivedUDPMessage&& msg);
   int from_user_fifo_fd();
+  std::pair<bool,millis_timestamp_t> open_status();
 
 private:
   host_id_type self_id_;
@@ -63,6 +66,9 @@ private:
   FifoToUser fifo_to_user_;
   std::deque<ReceivedUDPMessage> message_queue_;
   std::mutex queue_lock_;
+  SegmentNumGenerator::segnum_t current_peer_segnum_;
+  SegmentNumGenerator::segnum_t old_peer_segnum_;
+  millis_timestamp_t last_hello_packet_sent_;
 };
 
 #endif

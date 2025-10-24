@@ -9,6 +9,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "EpochTime.h"
+
 namespace
 {
   /* constants used in calculating the number of loop passes a connection worker thread
@@ -64,14 +66,23 @@ namespace
   }
 
 
-  /* run_poll() calls poll() on the supplied list of file descriptors, retrying until
-   * an event occurs or there is an unrecoverable error.
+  /* run_poll() calls poll() on the supplied list of file descriptors, retrying
+   * until an event occurs, there is an unrecoverable error, or the timeout
+   * expires. The timeout is given in milliseconds, with -1 meaning no timeout.
    */
-  void run_poll(pollfd* poll_fds, int num_poll_fds)
+  void run_poll(pollfd* poll_fds, int num_poll_fds, int timeout)
   {
     int ret = 0;
+    millis_timestamp_t start_time = epoch_time_millis();
+
     while(ret == 0){
-      ret = poll(poll_fds,num_poll_fds,-1); // -1 means no timeout
+      millis_timestamp_t elapsed_time = epoch_time_millis() - start_time;
+      if( (timeout != -1) and (static_cast<int>(elapsed_time) >= timeout) ){
+        return;
+      }
+
+      int loop_timeout = (timeout == -1) ? -1 : timeout - elapsed_time;
+      ret = poll(poll_fds,num_poll_fds,loop_timeout);
       if(ret == -1){
         if((errno == EINTR) or (errno == EAGAIN)){ // recoverable error, try again
           ret = 0;}
@@ -79,6 +90,7 @@ namespace
           throw std::runtime_error("Session: poll() reported an error");}
       }
     }
+
   }
 
 }
@@ -223,7 +235,7 @@ void Session::udp_socket_thread_func()
   while(true){
 
     /* use poll() to wait until something has happened on the socket or the internal pipe */
-    run_poll(poll_fds,2);
+    run_poll(poll_fds,2,-1); // -1 means "no timeout"
 
     /* any write to the internal pipe is a signal that we should exit */
     if(poll_fds[1].revents & POLLIN){
@@ -294,6 +306,11 @@ void Session::fifo_monitor_thread_func()
        session_condvar_ */
     int num_to_notify = 0;
 
+    /* poll_timeout specifies the timeout (in milliseconds) for the poll() call we shall
+       run. We initialize it to -1, which means "no timeout", but it may be set to a
+       positive value below. */
+    int poll_timeout = -1;
+
     {/* new block to limit the scope of session_lock_guard */
       const std::lock_guard<std::mutex> session_lock_guard(session_lock_);
 
@@ -321,11 +338,47 @@ void Session::fifo_monitor_thread_func()
 
       /* build the list of pollfd structs for the call to poll() */
       num_poll_fds = 1;
+      millis_timestamp_t millis_since_epoch = epoch_time_millis();
       for(auto const& it : monitor_fds_){
-        poll_fds[num_poll_fds].fd = it.first;
-        poll_fds[num_poll_fds].events = POLLIN;
-        num_poll_fds += 1;
+        /* For each Connection whose fifo is in the list for monitoring, we check whether it
+           is "open" or not, i.e. if it has a peer segment number that it can use to send
+           packets. If it is not open, then it cannot send any data which is waiting on its
+           fifo. In this case, the only thing a Connection can do is to send a "hello" packet
+           to its peer to try to get a reply with a segment number. If it sent a "hello" packet
+           to its peer recently, we don't want to monitor its fifo as there will probably be
+           data waiting there which the Connection cannot deal with right now. We set a timeout
+           on the call to poll() to ensure that the Connection will be able to send another
+           "hello" packet after a suitable interval. */
+
+        /* Take a reference to the Connection which owns this fifo. The Connection objects live
+           until after all of the Session threads have exited, so this reference cannot become
+           dangling. */
+        Connection& conn = *((*connections_.find(it.second)).second.first);
+
+        std::pair<bool,millis_timestamp_t> conn_status = conn.open_status();
+        millis_timestamp_t millis_since_hello = millis_since_epoch - conn_status.second;
+        if( (not conn_status.first) and (millis_since_hello < 100) ){
+          /* The Connection is closed and has recently sent a "hello" packet, so there is
+             nothing the Connection can do with any data on the fifo for now. We don't add
+             its fifo to the list to poll() on, but we do set a timeout on poll() so that
+             this Connection can be given the chance to send another "hello" packet after
+             a suitable interval. */
+          if(poll_timeout == -1){
+            /* if poll_timeout has not yet been set to a positive value, set it to 100
+               so that the next statement will work */
+            poll_timeout = 100;
+          }
+          poll_timeout = ( static_cast<int>(100-millis_since_hello) < poll_timeout ) ?
+            (100-millis_since_hello) : poll_timeout;
+        }
+        else{
+          /* add the Connection to the list for poll() */
+          poll_fds[num_poll_fds].fd = it.first;
+          poll_fds[num_poll_fds].events = POLLIN;
+          num_poll_fds += 1;
+        }
       }
+
     }
 
     /* notify session_condvar_ once for each Connection we enqueued */
@@ -333,7 +386,7 @@ void Session::fifo_monitor_thread_func()
       session_condvar_.notify_one();}
 
     /* call poll() on the list of pollfd structs */
-    run_poll(poll_fds.data(),num_poll_fds);
+    run_poll(poll_fds.data(),num_poll_fds,poll_timeout);
 
     /* Clear out any data from monitor_wake_read_fd_, as it has now served
        its purpose by waking the thread from poll() and we don't want it to

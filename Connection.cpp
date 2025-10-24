@@ -34,7 +34,10 @@ Connection::Connection(const host_id_type& self_id,
   crypto_unit_(key),
   rtt_tracker_(std::make_shared<RTTTracker>()),
   fifo_from_user_(fifo_base_path+fifo_from_user_suffix),
-  fifo_to_user_(fifo_base_path+fifo_to_user_suffix)
+  fifo_to_user_(fifo_base_path+fifo_to_user_suffix),
+  current_peer_segnum_(0),
+  old_peer_segnum_(0),
+  last_hello_packet_sent_(0)
 {}
 
 
@@ -106,6 +109,11 @@ bool Connection::is_data()
   }
 
   /* check if there is any data to be read on fifo_from_user_ */
+  if(current_peer_segnum_ == 0){
+    /* if the Connection is "closed", then we cannot process any data waiting on the
+       fifo */
+    return false;
+  }
   pollfd pfd;
   pfd.fd = fifo_from_user_.file_descriptor();
   pfd.events = POLLIN;
@@ -142,3 +150,14 @@ void Connection::add_message(ReceivedUDPMessage&& msg)
  */
 int Connection::from_user_fifo_fd()
 { return fifo_from_user_.file_descriptor(); }
+
+
+/* Connection::open_status() reports whether the Connection is "open",
+ * meaning that it has a segment number which it can use to send encrypted
+ * packets to the peer. The first element of the return value reports whether
+ * the Connection is "open", while the second is the number of milliseconds
+ * since the UNIX epoch when the last "hello" packet was sent to the peer
+ * in order to obtain a response containing a segment number.
+ */
+std::pair<bool,millis_timestamp_t> Connection::open_status()
+{ return {current_peer_segnum_ != 0, last_hello_packet_sent_}; }

@@ -302,6 +302,11 @@ void Session::fifo_monitor_thread_func()
         //NB i starts at 1 to ignore monitor_wake_read_fd_
         if(poll_fds[i].revents & POLLIN){
           auto it = monitor_fds_.find(poll_fds[i].fd);
+          if(it == monitor_fds_.end()){
+            /* this Connection has been enqueued since the last poll(), so there is nothing
+               to do */
+            continue;
+          }
           enqueue_connection((*it).second);
           num_to_notify++;
         }

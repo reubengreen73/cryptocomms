@@ -12,6 +12,7 @@
 #define SECRETKEY_H
 
 #include <string>
+#include <array>
 
 constexpr unsigned int secret_key_size = 32;
 
@@ -25,6 +26,7 @@ public:
   SecretKey& operator=(const SecretKey& other);
 
   SecretKey(const std::string& str);
+  SecretKey(const std::array<unsigned char,secret_key_size>& data);
 
   ~SecretKey();
 

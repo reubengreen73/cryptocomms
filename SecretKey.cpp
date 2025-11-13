@@ -62,6 +62,15 @@ SecretKey::SecretKey(const std::string& str):
 }
 
 
+SecretKey::SecretKey(const std::array<unsigned char,secret_key_size>& data)
+{
+  for(unsigned int i=0; i<secret_key_size; i++){
+    key_[i] = data[i];
+  }
+  valid_ = true;
+}
+
+
 /* move assignment includes explicit zero-ing of the old key */
 SecretKey& SecretKey::operator=(SecretKey&& other)
 {

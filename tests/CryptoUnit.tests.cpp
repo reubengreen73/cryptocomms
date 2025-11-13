@@ -35,6 +35,13 @@ std::vector<unsigned char> bytes_from_hex_string(const std::string& hexstr)
   return byte_vec;
 }
 
+/* CryptoUnit takes separate keys for encryption and decryption. The test functions here
+ * use two different CryptoUnits, one for encryption and one for decryption, as this
+ * reflects the real usage of CryptoUnit in the code. We use a dummy key for the unused
+ * encryption/decryption keys in our CryptoUnits. The following key is not used in any
+ * of the test vectors, and so is suitable for use as a dummy key.
+ */
+const SecretKey unused_key("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
 /* helper function to check that a test vector is encrypted/decrypted/authenticated
  * correctly
@@ -48,7 +55,8 @@ void run_test_vector(const std::string& key_str,
                      unsigned int ciphertext_offset = 0)
 {
   SecretKey secret_key(key_str);
-  CryptoUnit crypto_unit(key_str);
+  CryptoUnit crypto_unit_enc(secret_key,unused_key);
+  CryptoUnit crypto_unit_dec(unused_key,secret_key);
 
   typedef std::vector<unsigned char> bytes_t;
 
@@ -65,16 +73,16 @@ void run_test_vector(const std::string& key_str,
   }
 
   bytes_t trial_tagged_ciphertext(ciphertext_offset+plaintext.size()+16);
-  crypto_unit.encrypt(plaintext, additional, iv,
-                      trial_tagged_ciphertext,ciphertext_offset);
+  crypto_unit_enc.encrypt(plaintext, additional, iv,
+                          trial_tagged_ciphertext,ciphertext_offset);
 
   bool tag_valid;
-  bytes_t trial_plaintext = crypto_unit.decrypt(tagged_ciphertext,
-                                                additional,
-                                                iv,
-                                                ciphertext_offset,
-                                                plaintext.size()+16,
-                                                tag_valid);
+  bytes_t trial_plaintext = crypto_unit_dec.decrypt(tagged_ciphertext,
+                                                    additional,
+                                                    iv,
+                                                    ciphertext_offset,
+                                                    plaintext.size()+16,
+                                                    tag_valid);
 
   TESTASSERT(trial_tagged_ciphertext == tagged_ciphertext);
   TESTASSERT(tag_valid);
@@ -90,7 +98,7 @@ void check_tamper_detected(const std::string& key_str,
                            const std::string& tag_str)
 {
   SecretKey secret_key(key_str);
-  CryptoUnit crypto_unit(key_str);
+  CryptoUnit crypto_unit(unused_key,secret_key);
 
   typedef std::vector<unsigned char> bytes_t;
 

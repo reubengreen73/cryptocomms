@@ -15,16 +15,17 @@
 /* CryptoUnit::CryptoUnit() just sets up the two OpenSSL cipher contexts which CryptoUnit
  * uses for encryption and decryption. Note that these contexts are stored in unique_ptrs
  * with a customized deleter, so they will be properly released even if this constructor
- * throws an error.
+ * throws an error. The enc_key parameter holds the key to use for encrypting, while the
+ * dec_key parameter holds the key to use for decrypting.
  */
-CryptoUnit::CryptoUnit(const SecretKey& key)
+CryptoUnit::CryptoUnit(const SecretKey& enc_key, const SecretKey& dec_key)
 {
   enc_cipher_ctx = std::unique_ptr<EVP_CIPHER_CTX,CryptoUnitDeleter>(EVP_CIPHER_CTX_new());
   if(nullptr == enc_cipher_ctx.get()){
     throw std::runtime_error("CryptoUnit: EVP_CIPHER_CTX_new failed for encryption context");
   }
 
-  if(1 != EVP_EncryptInit_ex(enc_cipher_ctx.get(), EVP_aes_256_gcm(), NULL, key.data(), NULL)){
+  if(1 != EVP_EncryptInit_ex(enc_cipher_ctx.get(), EVP_aes_256_gcm(), NULL, enc_key.data(), NULL)){
     throw std::runtime_error("CryptoUnit: EVP_EncryptInit_ex failed to set cipher and key");
   }
 
@@ -33,16 +34,16 @@ CryptoUnit::CryptoUnit(const SecretKey& key)
     throw std::runtime_error("CryptoUnit: EVP_CIPHER_CTX_new failed for decryption context");
   }
 
-  if(1 != EVP_DecryptInit_ex(dec_cipher_ctx.get(), EVP_aes_256_gcm(), NULL, key.data(), NULL)){
+  if(1 != EVP_DecryptInit_ex(dec_cipher_ctx.get(), EVP_aes_256_gcm(), NULL, dec_key.data(), NULL)){
     throw std::runtime_error("CryptoUnit: EVP_DecryptInit_ex failed to set cipher and key");
   }
 }
 
 
 /* CryptoUnit::encrypt() computes the encryption of the argument "plaintext" using the
- * CryptoUnit's key, with the given iv and additional data. The ciphertext and AEAD tag
- * are written to "dest" at offset "dest_offset" (the AEAD tag is written after the
- * ciphertext).
+ * CryptoUnit's encryption key, with the given iv and additional data. The ciphertext and
+ * AEAD tag are written to "dest" at offset "dest_offset" (the AEAD tag is written after
+ * the ciphertext).
  */
 void CryptoUnit::encrypt(const std::vector<unsigned char>& plaintext,
                          const std::vector<unsigned char>& additional,
@@ -131,10 +132,10 @@ void CryptoUnit::encrypt(const std::vector<unsigned char>& plaintext,
 }
 
 
-/* CryptoUnit::decrypt() authenticates and decrypts the ciphertext and AEAD tag
- * which begins at offset src_offset in ciphertext_and_tag and has length "length"
- * bytes (including the AEAD tag). The authentication and decryption use CryptoUnit's key,
- * the initialization vector iv, and the additional data in "additional".
+/* CryptoUnit::decrypt() authenticates and decrypts the ciphertext and AEAD tag which begins at
+ * offset src_offset in ciphertext_and_tag and has length "length" bytes (including the AEAD
+ * tag). The authentication and decryption use CryptoUnit's decryption key, the initialization
+ * vector iv, and the additional data in "additional".
  *
  * The pass-by-reference parameter good_tag is used to indicate whether the AEAD authentication
  * tag was valid. Callers should always check this bool on return. If good_tag is true, the

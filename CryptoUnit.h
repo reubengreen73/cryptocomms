@@ -24,7 +24,7 @@ public:
      a type to represent this */
   typedef std::array<unsigned char,12> iv_t;
 
-  CryptoUnit(const SecretKey& key);
+  CryptoUnit(const SecretKey& enc_key, const SecretKey& dec_key);
 
   /* We do not want to allow copying, as there is no good way to do this, since we
    * do not want the EVP_CIPHER_CTX objects pointed to by enc_ciphertext_ctx and

@@ -5,9 +5,9 @@ development. Cryptocomms is intended exclusively for this purpose, and is **NOT*
 to be used to protect real communications, see WARNING below.
 
 I am still in the process of developing a first full version of Cryptocomms. Currently
-(25 September 2025) Cryptocomms can move data between hosts, but does not yet have
-encryption, authentication, or reliability. I have posted this unfinished version to
-GitHub so that people can see an example of my work
+(13 November 2025) Cryptocomms can move data between hosts with authenticated encryption,
+but does not yet have reliability. I have posted this unfinished version to GitHub so that
+people can see an example of my work
 
 # Warning And License
 

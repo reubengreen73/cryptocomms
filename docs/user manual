@@ -18,15 +18,15 @@ ability in C++ and software development. Cryptocomms is intended exclusively for
 and is NOT intended to be used to protect real communications, see the file WARNING_README.
 
 I am still in the process of developing a first full version of Cryptocomms. Currently
-(25 September 2025) Cryptocomms can move data between hosts, but does not yet have encryption,
-authentication, or reliability.
+(13 November 2025) Cryptocomms can move data between hosts with authenticated encryption,
+but does not yet have reliability.
 
 
 ############
 # Overview #
 ############
-[NOTE: Cryptocomms can currently move data between hosts, but does so without any
- of the encryption, authentication, or reliability described in this section.]
+[NOTE: Cryptocomms can currently move data between hosts with authenticated encryption, but
+does so without the reliability described in this section.]
 
 Cryptocomms is a simple system for reliable encrypted communication written in C++.
 

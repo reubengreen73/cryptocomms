@@ -35,8 +35,8 @@ namespace
  * info parameter in "info" using the SHA256 hash function. Note that we use only the HKDF
  * expand operation here. We use this to derive multiple keys from the same secret (each
  * Connection calls hkdf_expand() twice with the same "secret" but different "info", to derive
- * send and receive keys). The shared secret which the two ends of a Connection is required
- * to be chosen with cryptographic randomness, so we do not need the HKDF extract operation.
+ * send and receive keys). The shared secret which two peered Connections share is required to
+ * be chosen with cryptographic randomness, so we do not need the HKDF extract operation.
  */
 SecretKey hkdf_expand(const SecretKey& secret,
                       const std::vector<unsigned char>& info)

@@ -1,7 +1,5 @@
-CRYPTOCOMMS IS INTENDED SOLELY AS A DEMONSTRATION OF THE AUTHOR'S SKILLS AND SHOULD
-NOT BE USED TO SECURE REAL COMMUNICATIONS. SEE THE FILE WARNING_README FOR THE FULL
-WARNING.
-
+CRYPTOCOMMS IS INTENDED SOLELY AS A DEMONSTRATION OF THE AUTHOR'S SKILLS AND SHOULD NOT BE
+USED TO SECURE REAL COMMUNICATIONS. SEE THE FILE WARNING_README FOR THE FULL WARNING.
 
 For a general introduction to Cryptocomms, see the user manual.
 
@@ -12,10 +10,10 @@ For a general introduction to Cryptocomms, see the user manual.
 
 Cryptocomms uses a very simple custom build system.
 
-The build system is a python script, gen_makefile.py, which examines the project
-files and generates a Makefile. This Makefile can then be used to compile the project.
-More specifically, the gen_makefile.py script scans each .cpp for #include lines with
-double quotes, and then deduces dependencies accordingly.
+The build system is a python script, gen_makefile.py, which examines the project files and
+generates a Makefile. This Makefile can then be used to compile the project.  More
+specifically, the gen_makefile.py script scans each .cpp for #include lines with double
+quotes, and then deduces dependencies accordingly.
 
 Conceptually, the Cryptocomms source code consists of the file main.cpp and a number of
 "units", each unit being composed of a .cpp file and a .h file with matching base file
@@ -36,9 +34,10 @@ change.
 
 Cryptocomms uses a very simple custom test framework.
 
-The main component of the test framework is a python script, gen_tester.py, which generates
-C++ source code for a test runner binary which will run some or all of the project's tests.
-The tests should be placed in files with the extension .tests.cpp in the directory "tests".
+The main component of the test framework is a python script, gen_tester.py, which
+generates C++ source code for a test runner binary which will run some or all of the
+project's tests.  The tests should be placed in files with the extension .tests.cpp in the
+directory "tests".
 
 Each .tests.cpp file should #include the header file testsys.h, which defines four macros
 TESTFUNC, TESTASSERT, TESTTHROW, and TESTMSG. Test functions then have the following form:
@@ -61,34 +60,37 @@ TESTFUNC, TESTASSERT, TESTTHROW, and TESTMSG. Test functions then have the follo
 
   }
 
-The gen_tester.py script is called automatically from the Makefile if any .test.cpp file changes,
-so it should never be necessary to call it manually.
+The gen_tester.py script is called automatically from the Makefile if any .test.cpp file
+changes, so it should never be necessary to call it manually.
 
-The TESTFUNC macro used to declare a test function serves two purposes. Firstly, it declares a
-function of the correct type with a fixed string prepended to the supplied name. Secondly, it
-marks the function for inclusion in the collection of functions called by the "tester" binary.
-Note that the TESTFUNC declaration must be made at global scope, and that the name passed to
-TESTFUNC must be unique amongst all tests across all files.
+The TESTFUNC macro used to declare a test function serves two purposes. Firstly, it
+declares a function of the correct type with a fixed string prepended to the supplied
+name. Secondly, it marks the function for inclusion in the collection of functions called
+by the "tester" binary.  Note that the TESTFUNC declaration must be made at global scope,
+and that the name passed to TESTFUNC must be unique amongst all tests across all files.
 
-Each TESTFUNC is run in a freshly created empty directory under the project root, which is deleted
-after the TESTFUNC has finished. Thus it is not necessary to clean up any temporary files or
-directories created under the working directory during the test.
+Each TESTFUNC is run in a freshly created empty directory under the project root, which is
+deleted after the TESTFUNC has finished. Thus it is not necessary to clean up any
+temporary files or directories created under the working directory during the test.
 
-Within a TESTFUNC, you can use the macros TESTASSERT and TESTTHROW to perform tests, as shown
-above. TESTASSERT checks the truth of some boolean statement, while TESTTHROW checks that a
-piece of code throws a certain error (specifically, TESTTHROW checks that its first argument,
-which must be a code snippet, throws an exception whose what() string contains its second
-argument, which should thus be some kind of string).
+Within a TESTFUNC, you can use the macros TESTASSERT and TESTTHROW to perform tests, as
+shown above. TESTASSERT checks the truth of some boolean statement, while TESTTHROW checks
+that a piece of code throws a certain error (specifically, TESTTHROW checks that its first
+argument, which must be a code snippet, throws an exception whose what() string contains
+its second argument, which should thus be some kind of string).
 
-TESTMSG can be used to print a message to the user. For example, you could tell the user that
-you are about to run a test which will take a while, or provide updates on a long-running test.
+TESTMSG can be used to print a message to the user. For example, you could tell the user
+that you are about to run a test which will take a while, or provide updates on a
+long-running test.
 
-The test runner binary is called "tester" and is generated by running "make tester" or indirectly
-by running "make all". Invoking the binary with no arguments runs all tests, while invoking it with
-a list of base names of .test.cpp files will invoke only the tests in those files. For example,
-"./tester Foo Bar" will run only the tests from tests/Foo.tests.cpp and tests/Bar.tests.cpp.
+The test runner binary is called "tester" and is generated by running "make tester" or
+indirectly by running "make all". Invoking the binary with no arguments runs all tests,
+while invoking it with a list of base names of .test.cpp files will invoke only the tests
+in those files. For example, "./tester Foo Bar" will run only the tests from
+tests/Foo.tests.cpp and tests/Bar.tests.cpp.
 
-All identifiers (including macro names) beginning with "testsys_" or "TESTSYS_" are reserved for
-the internal use of the test system. More specifically, any file which #includes tests/testsys.h
-should not use these identifiers at global scope, or in any test function defined with TESTFUNC.
-In practice, the files which #include test are the *.tests.cpp files in the "tests" directory.
+All identifiers (including macro names) beginning with "testsys_" or "TESTSYS_" are
+reserved for the internal use of the test system. More specifically, any file which
+#includes tests/testsys.h should not use these identifiers at global scope, or in any test
+function defined with TESTFUNC.  In practice, the files which #include test are the
+*.tests.cpp files in the "tests" directory.

@@ -11,11 +11,11 @@
 #include <algorithm>
 #include <thread>
 #include <fstream>
+#include <cerrno>
 
 #include <unistd.h>
 #include <fcntl.h>
 #include <netinet/in.h> // for in_port_t
-#include <errno.h>
 
 /* This file contains tests for Session. Because Session is the main interface to the
  * cryptocomms functionality, the tests here are in effect integration tests for the

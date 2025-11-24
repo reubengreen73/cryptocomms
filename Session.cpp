@@ -3,11 +3,11 @@
 #include <algorithm>
 #include <chrono>
 #include <stdexcept>
+#include <cerrno>
 
 #include <poll.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
 
 #include "EpochTime.h"
 
@@ -395,7 +395,9 @@ void Session::fifo_monitor_thread_func()
       char discard_buffer[128];
       ssize_t ret = read(monitor_wake_read_fd_,discard_buffer,128);
       if(ret == -1){
-        if(errno == EAGAIN){ // pipe is empty, we are done
+        if(errno == EAGAIN){
+          /* Pipe is empty, we are done. Note that EWOULDBLOCK can only happen if the
+             fd is a socket, which it is not here. */
           break;}
         if(errno != EINTR){
           throw std::runtime_error("Session: error reading from internal pipe ");}

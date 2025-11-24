@@ -159,7 +159,10 @@ std::vector<unsigned char> FifoFromUser::read(unsigned int count)
       if(errno == EINTR){
         continue;
       }
-      if(errno == EAGAIN){ // the read would block if fd_ were not O_NONBLOCK
+      if(errno == EAGAIN){
+        /* The read would block if fd_ were not O_NONBLOCK.
+           Note that EWOULDBLOCK can only occur if the fd is a socket,
+           which it is not here. */
         break;
       }
       throw FifoIOError("FifoIO: error reading from fifo "+path_);
@@ -261,7 +264,9 @@ std::pair<unsigned int,bool> FifoToUser::write(const std::vector<unsigned char>&
         return {total_written,true};
       }
       if(errno == EAGAIN){
-        // EAGAIN means the pipe is full
+        /* EAGAIN means the pipe is full.
+           Note that EWOULDBLOCK can only happen if the fd is a socket, which it is
+           not here. */
         break;
       }
       throw FifoIOError("FifoIO: error writing to fifo "+path_);

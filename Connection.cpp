@@ -1,6 +1,7 @@
 #include "Connection.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <poll.h>
 
 #include "HKDFUnit.h"
@@ -63,7 +64,7 @@ namespace
 
       if(ret == -1){
         if( (errno == EINTR) or (errno == EAGAIN) ){
-          //recoverable error, try again
+          // recoverable error, try again
           continue;
         }
         throw std::runtime_error("Connection: poll() reported an error");

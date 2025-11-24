@@ -27,11 +27,11 @@ test_source_template_string = """\
 #include <stdexcept>
 #include <iostream>
 #include <map>
+#include <cerrno>
 
 #include <sys/stat.h>
 #include <ftw.h>
 #include <unistd.h>
-#include <errno.h>
 
 typedef void (*testsys_function_t)();
 

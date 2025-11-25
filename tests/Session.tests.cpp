@@ -175,7 +175,7 @@ bool move_data(int write_fd, int read_fd, unsigned int num_bytes, unsigned int c
         if(errno == EINTR){
           ret=0;}
         else{
-          throw std::runtime_error("Test Error: could not write");}
+          TESTERROR("could not write");}
       }
       bytes_written += ret;
     }
@@ -193,7 +193,7 @@ bool move_data(int write_fd, int read_fd, unsigned int num_bytes, unsigned int c
         if(errno == EINTR){
           ret=0;}
         else{
-          throw std::runtime_error("Test Error: could not read");}
+          TESTERROR("could not read");}
       }
 
       /* ...and check that they are the bytes we expected */

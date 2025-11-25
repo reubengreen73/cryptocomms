@@ -51,7 +51,7 @@ namespace
         if(errno == EINTR){
           continue;
         }
-        throw std::runtime_error("Test Error: could not read from FIFO");
+        TESTERROR("could not read from FIFO");
       }
     }
     return std::vector<unsigned char>(fifo_buff.begin(),fifo_buff.begin()+ret);
@@ -67,7 +67,7 @@ namespace
         if(errno == EINTR){
           continue;
         }
-        throw std::runtime_error("Test Error: could not write to FIFO");
+        TESTERROR("could not write to FIFO");
       }
     }
     TESTASSERT(static_cast<unsigned int>(ret) == data.size());
@@ -129,7 +129,7 @@ namespace
     /* create a socket */
     conn_etc.socket_fd = socket(AF_INET,SOCK_DGRAM,0);
     if(conn_etc.socket_fd == -1){
-      throw std::runtime_error("Test Error: could not create socket for testing");
+      TESTERROR("could not create socket for testing");
     }
 
     /* prepare an address struct to bind the socket */
@@ -139,21 +139,21 @@ namespace
     bind_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     if(bind_addr.sin_addr.s_addr == (in_addr_t)(-1)){
       close(conn_etc.socket_fd);
-      throw std::runtime_error("Test Error: bad IP address for binding");
+      TESTERROR("bad IP address for binding");
     }
     bind_addr.sin_port = htons(0);
 
     /* bind the socket */
     if(bind(conn_etc.socket_fd,(sockaddr*)&bind_addr,sizeof(bind_addr)) == -1){
       close(conn_etc.socket_fd);
-      throw std::runtime_error("Test Error: could not bind");
+      TESTERROR("could not bind");
     }
 
     /* find the socket's port */
     socklen_t socklen = sizeof(bind_addr);
     if(getsockname(conn_etc.socket_fd,(sockaddr*)&bind_addr,&socklen) == -1){
       close(conn_etc.socket_fd);
-      throw std::runtime_error("Test Error: could not get socket information after bind");
+      TESTERROR("could not get socket information after bind");
     }
     conn_etc.socket_fd_bound_port = ntohs(bind_addr.sin_port);
 
@@ -380,7 +380,7 @@ namespace
         if(errno == EINTR){
           continue;
         }
-        throw std::runtime_error("Test Error: could not read from socket");
+        TESTERROR("could not read from socket");
       }
     }
 
@@ -557,7 +557,7 @@ namespace
             //recoverable error, try again
             continue;
           }
-          throw std::runtime_error("Test Error: poll() reported an error");
+          TESTERROR("poll() reported an error");
         }
 
         /* check that there is no data */

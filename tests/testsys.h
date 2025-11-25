@@ -49,3 +49,9 @@
 /* The TESTMSG macro prints a message for the user
  */
 #define TESTMSG(MSG) std::cout << "  | " << (MSG) << std::endl;
+
+
+/* TESTERROR throws an error when something has gone wrong in the test environment
+ */
+#define TESTERROR(MSG) throw std::runtime_error("Test error: " #MSG " | " \
+                             __FILE__ " at line " TESTSYS_STRINGIFY(__LINE__))

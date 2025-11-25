@@ -16,7 +16,7 @@ TESTFUNC(FifoIO_cannot_create_fifo)
   // create a directory where we cannot write
   int res = mkdir(testdir.c_str(),S_IRUSR|S_IRGRP|S_IROTH|S_IXUSR|S_IXGRP|S_IXOTH);
   if(res == -1){
-    throw std::runtime_error("Test Error: could not create directory for testing");
+    TESTERROR("could not create directory for testing");
   }
 
   TESTTHROW(FifoFromUser((testdir+"/"+testfifo).c_str()),"could not create FIFO at");
@@ -32,7 +32,7 @@ TESTFUNC(FifoIO_cannot_stat_fifo)
   // create a directory where we cannot stat
   int res = mkdir(testdir.c_str(),S_IRUSR|S_IRGRP|S_IROTH);
   if(res == -1){
-    throw std::runtime_error("Test Error: could not create directory for testing");
+    TESTERROR("could not create directory for testing");
   }
 
   TESTTHROW(FifoFromUser(testdir+"/"+testfifo),"could not stat file at");
@@ -45,7 +45,7 @@ TESTFUNC(FifoIO_file_not_fifo)
   std::string filename = "test_not_fifo";
   int fd = open(filename.c_str(), O_CREAT|O_WRONLY);
   if(fd == -1){
-    throw std::runtime_error("Test Error: could not create file "+filename);
+    TESTERROR("could not create file "+filename);
   }
   close(fd);
 
@@ -60,7 +60,7 @@ TESTFUNC(FifoIO_read_only_fifo_to_user)
   std::string filename = "read_only_fifo";
 
   if(mkfifo(filename.c_str(),S_IRUSR|S_IRGRP|S_IROTH) == -1){
-    throw std::runtime_error("Test Error: could not create fifo "+filename);
+    TESTERROR("could not create fifo "+filename);
   }
 
   TESTTHROW(FifoToUser{filename},"could not open "+filename);

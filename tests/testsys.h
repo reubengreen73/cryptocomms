@@ -2,6 +2,9 @@
  * .tests.cpp files
  */
 
+#ifndef TESTSYS_H
+#define TESTSYS_H
+
 #include <string>
 #include <stdexcept>
 #include <iostream>
@@ -55,3 +58,5 @@
  */
 #define TESTERROR(MSG) throw std::runtime_error("Test error: " #MSG " | " \
                              __FILE__ " at line " TESTSYS_STRINGIFY(__LINE__))
+
+#endif

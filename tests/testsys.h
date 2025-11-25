@@ -46,6 +46,6 @@
   } \
 }
 
-/*
+/* The TESTMSG macro prints a message for the user
  */
 #define TESTMSG(MSG) std::cout << "  | " << (MSG) << std::endl;

@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <iostream>
 
+std::string time_now_string();
+
 /* The TESTFUNC macro does more than just generate a function
  * signature with a slightly mangled name. It tells the python
  * script which scans all of the .test.cpp files that this function
@@ -51,7 +53,7 @@
 
 /* The TESTMSG macro prints a message for the user
  */
-#define TESTMSG(MSG) std::cout << "  | " << (MSG) << std::endl;
+#define TESTMSG(MSG) std::cout << "  | " << (MSG) << " [" << time_now_string() << "]\n";
 
 
 /* TESTERROR throws an error when something has gone wrong in the test environment

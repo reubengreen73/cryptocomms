@@ -68,14 +68,17 @@ clean:
 cryptocomms: main.o $ALL_UNIT_O_FILES
 	g++ $$(DBG) -pthread main.o $ALL_UNIT_O_FILES -lcrypto -o cryptocomms
 
-tester: tester.o $ALL_UNIT_O_FILES $ALL_TEST_O_FILES
-	g++ $$(DBG) -pthread tester.o $ALL_UNIT_O_FILES $ALL_TEST_O_FILES -lcrypto -o tester
+tester: tester.o testsys.o $ALL_UNIT_O_FILES $ALL_TEST_O_FILES
+	g++ $$(DBG) -pthread tester.o testsys.o $ALL_UNIT_O_FILES $ALL_TEST_O_FILES -lcrypto -o tester
 
 main.o: main.cpp $MAIN_H_FILES
 	g++ $$(DBG) -std=c++14 $$(CHECKS) -c main.cpp
 
 tester.o: tester.cpp
 	g++ $$(DBG) -std=c++14 $$(CHECKS) -c tester.cpp
+
+testsys.o: tests/testsys.cpp
+	g++ $$(DBG) -std=c++14 $$(CHECKS) -c tests/testsys.cpp
 
 tester.cpp: $ALL_TEST_CPP_FILES
 	./gen_tester.py

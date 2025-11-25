@@ -33,6 +33,8 @@ test_source_template_string = """\
 #include <ftw.h>
 #include <unistd.h>
 
+#include "tests/testsys.h"
+
 typedef void (*testsys_function_t)();
 
 int testsys_deleter(const char* path, const struct stat* stat_info,
@@ -168,7 +170,7 @@ runtests_function_template_string = """$TESTFUNC_DECLS
 int testsys_${SECTION}_runtests(){
   int failed_test_count = 0;
 
-  std::cout << "Running tests for ${SECTION}" << std::endl;
+  std::cout << "Running tests for ${SECTION} [" << time_now_string() << "]" << std::endl;
 
 $RUN_TEST_INVOCATIONS
 

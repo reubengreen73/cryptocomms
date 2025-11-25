@@ -32,9 +32,11 @@ struct SessionAndFDs
   void close_all()
   {
     for(auto& x : to_user_fifos){
-      close(x.second);}
+      close(x.second);
+    }
     for(auto& x : from_user_fifos){
-      close(x.second);}
+      close(x.second);
+    }
   }
 };
 
@@ -108,7 +110,8 @@ TestBytes::TestBytes():
   std::mt19937 rng(std::random_device{}());
   std::uniform_int_distribution<std::mt19937::result_type> dist(0,255);
   for(unsigned int i=0; i<seed_.size(); i++){
-    seed_[i] = dist(rng);}
+    seed_[i] = dist(rng);
+  }
 }
 
 std::vector<unsigned char> TestBytes::take_bytes(unsigned int size)
@@ -137,11 +140,14 @@ std::vector<unsigned char> TestBytes::gen_bytes(unsigned int pos, unsigned int s
   for(unsigned int i=0;i<size;i++){
     unsigned int j = pos+i;
     if( (j%8) == 0 ){
-      bytes[i] = (j/(256*256))%256;}
+      bytes[i] = (j/(256*256))%256;
+    }
     else if( (j%8) == 2 ){
-      bytes[i] = (j/256)%256;}
+      bytes[i] = (j/256)%256;
+    }
     else if( (j%8) == 4 ){
-      bytes[i] = j%256;}
+      bytes[i] = j%256;
+    }
     else{
       unsigned int x = seed_[0];
       for(int k=1; k<4; k++){
@@ -173,9 +179,11 @@ bool move_data(int write_fd, int read_fd, unsigned int num_bytes, unsigned int c
       int ret = write(write_fd,send_chunk.data()+bytes_written,send_chunk.size()-bytes_written);
       if(ret == -1){
         if(errno == EINTR){
-          ret=0;}
+          ret=0;
+        }
         else{
-          TESTERROR("could not write");}
+          TESTERROR("could not write");
+        }
       }
       bytes_written += ret;
     }
@@ -191,15 +199,18 @@ bool move_data(int write_fd, int read_fd, unsigned int num_bytes, unsigned int c
       int ret = read(read_fd,recv_chunk.data(),send_chunk.size()-bytes_read);
       if(ret == -1){
         if(errno == EINTR){
-          ret=0;}
+          ret=0;
+        }
         else{
-          TESTERROR("could not read");}
+          TESTERROR("could not read");
+        }
       }
 
       /* ...and check that they are the bytes we expected */
       std::vector<unsigned char> read_bytes(recv_chunk.begin(),recv_chunk.begin()+ret);
       if(not test_bytes.give_bytes(read_bytes)){
-        return false;}
+        return false;
+      }
 
       bytes_read += ret;
     }
@@ -284,7 +295,8 @@ TESTFUNC(Session_one_channel)
     unsigned int num_bytes = 500'000 +(dist100(rng)*100)+dist100(rng);
     unsigned int chunk_size = 1000+dist100(rng);
     if(i%10 == 0){
-      TESTMSG("  pass "+std::to_string(i)+" of 100");}
+      TESTMSG("  pass "+std::to_string(i)+" of 100");
+    }
     TESTASSERT( move_data(write_fifo_fd,read_fifo_fd,num_bytes,chunk_size) );
   }
 
@@ -391,7 +403,8 @@ TESTFUNC(Session_many_channels)
   TESTMSG("testing parallel communication in multiple channels, this may take some time");
   sync_lock->unlock();
   for(int i=0; i<num_channels; i++){
-    threads[i].join();}
+    threads[i].join();
+  }
 
   /* Check the results. Each thread records a 1 in "results" if the data was sent correctly,
      and a 0 otherwise */

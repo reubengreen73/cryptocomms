@@ -39,7 +39,8 @@ namespace
       if(ret == -1){
         // retry if the write call was interrupted, else throw an error
         if(errno != EINTR){
-          throw std::runtime_error("Session: could not write to internal pipe");}
+          throw std::runtime_error("Session: could not write to internal pipe");
+        }
       }
     }
   }
@@ -54,10 +55,12 @@ namespace
   {
     int pipe_fds[2];
     if(pipe(pipe_fds) == -1){
-      throw std::runtime_error("Session: could not create internal pipe");}
+      throw std::runtime_error("Session: could not create internal pipe");
+    }
 
     if(fcntl(pipe_fds[0],F_SETFL,O_NONBLOCK) == -1){
-      throw std::runtime_error("Session: could not set internal pipe as non-blocking");}
+      throw std::runtime_error("Session: could not set internal pipe as non-blocking");
+    }
 
     pipe_ends pipes;
     pipes.read_fd = pipe_fds[0];
@@ -85,9 +88,11 @@ namespace
       ret = poll(poll_fds,num_poll_fds,loop_timeout);
       if(ret == -1){
         if((errno == EINTR) or (errno == EAGAIN)){ // recoverable error, try again
-          ret = 0;}
+          ret = 0;
+        }
         else{
-          throw std::runtime_error("Session: poll() reported an error");}
+          throw std::runtime_error("Session: poll() reported an error");
+        }
       }
     }
 
@@ -207,7 +212,8 @@ void Session::stop()
 
   /* wait for all threads to stop */
   for(auto& t : connection_worker_threads_){
-    t.join();}
+    t.join();
+  }
   fifo_monitor_thread_.join();
   udp_socket_thread_.join();
 
@@ -239,11 +245,13 @@ void Session::udp_socket_thread_func()
 
     /* any write to the internal pipe is a signal that we should exit */
     if(poll_fds[1].revents & POLLIN){
-      return;}
+      return;
+    }
 
     /* if there is no data on the socket, try again */
     if(not poll_fds[0].revents & POLLIN){
-      continue;}
+      continue;
+    }
 
     /* pull a message out of the socket */
     ReceivedUDPMessage msg = udp_socket_->receive();
@@ -334,7 +342,8 @@ void Session::fifo_monitor_thread_func()
          code, as the list of Connections does not change during the Session's lifetime.
          However, this may change in the future, so we may as well cater for this now. */
       if(poll_fds.size() < monitor_fds_.size()+1){
-        poll_fds.resize(monitor_fds_.size()+1);}
+        poll_fds.resize(monitor_fds_.size()+1);
+      }
 
       /* build the list of pollfd structs for the call to poll() */
       num_poll_fds = 1;
@@ -383,7 +392,8 @@ void Session::fifo_monitor_thread_func()
 
     /* notify session_condvar_ once for each Connection we enqueued */
     for(int i=0; i<num_to_notify; i++){
-      session_condvar_.notify_one();}
+      session_condvar_.notify_one();
+    }
 
     /* call poll() on the list of pollfd structs */
     run_poll(poll_fds.data(),num_poll_fds,poll_timeout);
@@ -398,16 +408,19 @@ void Session::fifo_monitor_thread_func()
         if(errno == EAGAIN){
           /* Pipe is empty, we are done. Note that EWOULDBLOCK can only happen if the
              fd is a socket, which it is not here. */
-          break;}
+          break;
+        }
         if(errno != EINTR){
-          throw std::runtime_error("Session: error reading from internal pipe ");}
+          throw std::runtime_error("Session: error reading from internal pipe ");
+        }
         continue;
       }
 
       /* check through the bytes we read for a message that we should exit */
       for(int i=0; i<ret; i++){
         if(discard_buffer[i] == 1){ // a value of 1 means that shutdown has been signalled
-          return;}
+          return;
+        }
       }
     }
 
@@ -427,10 +440,12 @@ void Session::connection_worker_thread_func()
 
     /* wait for a Connection to process */
     while(connection_queue_.empty() and !stopping_){
-      session_condvar_.wait(session_unique_lock);}
+      session_condvar_.wait(session_unique_lock);
+    }
 
     if(stopping_){
-      return;}
+      return;
+    }
 
     /* take the first Connection id from the queue... */
     connection_id_type conn_id = connection_queue_[0];
@@ -452,9 +467,11 @@ void Session::connection_worker_thread_func()
       static_cast<unsigned int>(connections_.size()-monitor_fds_.size());
     if( (connection_dwell_loops_ > dwell_min) and
         (num_active_connections > connection_worker_threads_.size()) ){
-      connection_dwell_loops_ -= 1;}
+      connection_dwell_loops_ -= 1;
+    }
     else if( connection_dwell_loops_ < dwell_max){
-      connection_dwell_loops_ += 1;}
+      connection_dwell_loops_ += 1;
+    }
     int my_connection_dwell_loops = connection_dwell_loops_;
 
     /* run the Connection's move_data() method while *not* holding session_lock_ */
@@ -466,7 +483,8 @@ void Session::connection_worker_thread_func()
        for monitoring by the fifo monitoring thread. */
     (*it).second.second = false; // mark the Connection as "not being worked on"
     if(conn.is_data()){
-      enqueue_connection(conn_id);}
+      enqueue_connection(conn_id);
+    }
     else{
       monitor_fds_.insert({conn.from_user_fifo_fd(),conn_id});
       wake_monitor(false); // wake the fifo monitoring thread so that it will see that it
@@ -501,17 +519,20 @@ void Session::enqueue_connection(const connection_id_type& conn_id)
   /* find the Connection for this id */
   auto it = connections_.find(conn_id);
   if(it == connections_.end()){
-    throw std::runtime_error("Session: unknown connection id passed to be enqueued");}
+    throw std::runtime_error("Session: unknown connection id passed to be enqueued");
+  }
 
   /* if the Connection indexed by conn_id is already "being worked on", we have nothing
    to do */
   if((*it).second.second){
-    return;}
+    return;
+  }
 
   /* if conn_id is already in the queue, we have nothing to do */
   if(std::find(connection_queue_.begin(),connection_queue_.end(),conn_id)
      != connection_queue_.end()){
-    return;}
+    return;
+  }
 
   /* put the conn_id in the queue */
   connection_queue_.push_back(conn_id);

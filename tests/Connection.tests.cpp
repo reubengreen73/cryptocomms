@@ -107,11 +107,14 @@ namespace
     ~ConnectionAndRelated()
     {
       if(from_user_fifo_fd != -1){
-        close(from_user_fifo_fd);}
+        close(from_user_fifo_fd);
+      }
       if(to_user_fifo_fd != -1){
-        close(to_user_fifo_fd);}
+        close(to_user_fifo_fd);
+      }
       if(socket_fd != -1){
-        close(socket_fd);}
+        close(socket_fd);
+      }
     }
   };
 

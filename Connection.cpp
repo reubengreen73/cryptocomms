@@ -229,7 +229,8 @@ bool Connection::is_data()
   {// new block to limit the scope of queue_lock_guard
     const std::lock_guard<std::mutex> queue_lock_guard(queue_lock_);
     if(!message_queue_.empty()){
-      return true;}
+      return true;
+    }
   }
 
   /* check if there is any data to be read on fifo_from_user_ */

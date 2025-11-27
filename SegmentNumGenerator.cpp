@@ -110,8 +110,9 @@ namespace
        * pretty much always...
        */
       reread_segnum = get_saved_segnum(path);
-      if(reread_segnum == segnum)
+      if(reread_segnum == segnum){
         break;
+      }
 
       /* ... but if it does not work then we just sleep for 0.1 second and try again. This
        * is very crude but it's the only think I can think of other than just throwing an

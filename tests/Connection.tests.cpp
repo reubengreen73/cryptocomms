@@ -774,7 +774,7 @@ TESTFUNC(Connection_peer_repeats_hello)
 /* test that the Connection correctly resends "hello" packets to initiate
  * communication when the peer does not respond
  */
-TESTFUNC(Connection_7)
+TESTFUNC(Connection_hello_resend)
 {
   ConnectionAndRelated conn_etc = create_connection();
   ConnState conn_state;

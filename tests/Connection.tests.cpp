@@ -162,8 +162,9 @@ namespace
 
     /* 2 - create the segment number file */
     std::string segnumfile_name("segnumfile");
-    std::string segnum_string("0");
+    std::string segnum_string("1");
     std::ofstream segnum_file(segnumfile_name,std::ios::out);
+    segnum_file << segnum_string << std::endl;
     segnum_file << segnum_string;
     segnum_file.close();
 

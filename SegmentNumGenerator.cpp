@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <fstream>
+#include <algorithm>
 
 #include "EpochTime.h"
 
@@ -15,35 +16,58 @@ namespace
    */
   constexpr SegmentNumGenerator::segnum_t segnum_max = 281474976710655U;
 
-  /* get_saved_segnum() loads the stored segment number from the file. This number
-   * is the highest segment number which could have been used by a previous run of the
-   * application.
+  /* get_saved_segnum() loads the stored segment number from the file. A return
+   * value of 0 indicates an error (note that 0 is not a valid segment number).
    *
    * The application never creates this file, and for the application to run it must
    * already exist and contain a valid stored segment number. Allowing the application
    * to auto-create this file would weaken the effectiveness of recording which segment
    * numbers have been used.
+   *
+   * The format of the segment number file is as follows. The first two lines must be
+   * identical, and contain only the characters 0123456789. Any subsequent lines must
+   * be empty (not even whitespace is allowed). The number on the first two lines is the
+   * stored segment number. The strict formatting required of this file, together with
+   * the repetition of the stored number, means that any accidental corruption will be
+   * detected with high probability.
    */
   SegmentNumGenerator::segnum_t get_saved_segnum(const std::string& path)
   {
     std::ifstream segnum_file(path);
     if(!segnum_file){
-      throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
-                               +path);
+      return 0;
     }
 
-    std::string saved_segnum_string;
-    if(!std::getline(segnum_file,saved_segnum_string)){
-      throw std::runtime_error(std::string("SegmentNumGenerator: could not read stored segment number file: ")
-                               +path);
+    /* read the first two lines and check that they match */
+    std::string file_line_1, file_line_2;
+    bool good_read = true;
+    good_read = good_read and std::getline(segnum_file,file_line_1);
+    good_read = good_read and std::getline(segnum_file,file_line_2);
+    if( (not good_read) or (file_line_1 != file_line_2) ){
+      return 0;
     }
 
+    /* check that any additional lines are empty */
+    std::string file_line;
+    while(std::getline(segnum_file,file_line)){
+      if(file_line.size() > 0){
+        return 0;
+      }
+    }
+
+    /* check that the first line contains only digits */
+    auto check_func = [&](char c){return (std::string("0123456789").find(c) !=
+                                          std::string::npos);};
+    if(not std::all_of(file_line_1.begin(),file_line_1.end(),check_func) ){
+      return 0;
+    }
+
+    /* convert the first line to an integer */
     SegmentNumGenerator::segnum_t saved_segnum;
     try{
-      saved_segnum = std::stoull(saved_segnum_string);
+      saved_segnum = std::stoull(file_line_1);
     } catch (const std::exception& ex) {
-      throw std::runtime_error(std::string("SegmentNumGenerator: could not parse stored segment number in file: ")
-                               +path+std::string(" (exception was :")+ex.what()+std::string(")"));
+      return 0;
     }
 
     /* The segment number stored in the file should either be a value stored by a previous
@@ -53,9 +77,8 @@ namespace
      * previous run of the application could have stored is (segnum_max -1), and the initial
      * value set at installation should be vastly smaller than this.
      */
-    if( not(saved_segnum < segnum_max) ){
-      throw std::runtime_error(std::string("SegmentNumGenerator: stored segment number in file: ")+path+
-                               std::string(" is too big"));
+    if(not (saved_segnum < segnum_max) ){
+      return 0;
     }
 
     return saved_segnum;
@@ -84,7 +107,8 @@ namespace
   /* save_segnum() stores a segment number to back to the file. The number stored represents
    * the highest segment number which could already have been handed out by next_num().
    * save_segment() makes some effort to ensure that the file has been written to permanent
-   * storage before returning.
+   * storage before returning. The argument segnum must not be 0, as 0 is not a valid
+   * segment number.
    */
   void save_segnum(SegmentNumGenerator::segnum_t segnum, const std::string& path)
   {
@@ -102,6 +126,8 @@ namespace
                                  +path);
       }
 
+      /* see the comment before get_saved_segnum() for the format of the segment number file */
+      segnum_file << segnum_string << std::endl;
       segnum_file << segnum_string;
       segnum_file.close();
 
@@ -110,6 +136,7 @@ namespace
        * pretty much always...
        */
       reread_segnum = get_saved_segnum(path);
+      /* get_saved_segnum() returns 0 on error, but segnum will not be 0, so this is fine */
       if(reread_segnum == segnum){
         break;
       }
@@ -194,6 +221,10 @@ const std::lock_guard<std::mutex> guard_for_lock(lock_);
 void SegmentNumGenerator::reserve_nums()
 {
   segnum_t saved_segnum = get_saved_segnum(path_);
+  if(saved_segnum == 0){
+    throw std::runtime_error(std::string("SegmentNumGenerator: error reading saved") +\
+                             std::string(" segment number from file ") +  path_ );
+  }
 
   /* Generate a segment number from the system clock. We want to ensure that
    * this is a segment number that no previous run of the application could

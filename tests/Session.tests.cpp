@@ -51,8 +51,9 @@ SessionAndFDs make_session(const host_id_type& self_id,
                            unsigned int num_connection_workers)
 {
   /* create the segment number file */
-  std::string segnum_string("0");
+  std::string segnum_string("1");
   std::ofstream segnum_file(segnum_file_path,std::ios::out);
+  segnum_file << segnum_string << std::endl;
   segnum_file << segnum_string;
   segnum_file.close();
 

@@ -30,7 +30,8 @@ TESTFUNC(SegmentNumGenerator_stress_test_segnumgen_uniqueness)
   if(!segnum_file){
        TESTERROR("could not open \"testfile\"");
   }
-  segnum_file << std::to_string(0);
+  segnum_file << std::to_string(1) << std::endl;
+  segnum_file << std::to_string(1);
   segnum_file.close();
 
   TESTMSG("stress-testing SegmentNumGenerator, this may take some time")
@@ -80,22 +81,103 @@ TESTFUNC(SegmentNumGenerator_segnumgen_file_missing){
   }
 
   SegmentNumGenerator sng("testfile");
-  TESTTHROW(sng.next_num(),"SegmentNumGenerator: could not open stored segment number file");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: error reading saved segment number from file");
 }
 
 
-/* Check that a stored segnum file with non-numerical content causes the correct error to be thrown
+/* Check that a stored segnum file with just one line throws an error
  */
-TESTFUNC(SegmentNumGenerator_segnumgen_file_is_nonsense){
+TESTFUNC(SegmentNumGenerator_segnumgen_file_one_line){
   std::ofstream segnum_file("testfile",std::ios::trunc);
   if(!segnum_file){
     TESTERROR("could not open \"testfile\"");
   }
-  segnum_file << "blah blah";
+  segnum_file << "130607";
   segnum_file.close();
 
   SegmentNumGenerator sng("testfile");
-  TESTTHROW(sng.next_num(),"SegmentNumGenerator: could not parse stored segment number in file");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: error reading saved segment number from file");
+}
+
+
+/* Check that a stored segnum with non-digit characters throws an error
+ */
+TESTFUNC(SegmentNumGenerator_segnumgen_file_non_digit){
+  std::ofstream segnum_file("testfile",std::ios::trunc);
+  if(!segnum_file){
+    TESTERROR("could not open \"testfile\"");
+  }
+  segnum_file << "13o607" << std::endl;
+  segnum_file << "13o607";
+  segnum_file.close();
+
+  SegmentNumGenerator sng("testfile");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: error reading saved segment number from file");
+}
+
+
+/* Check that a stored segnum with trailing whitespace throws an error
+ */
+TESTFUNC(SegmentNumGenerator_segnumgen_file_trailing_whitespace){
+  std::ofstream segnum_file("testfile",std::ios::trunc);
+  if(!segnum_file){
+    TESTERROR("could not open \"testfile\"");
+  }
+  segnum_file << "130607 " << std::endl;
+  segnum_file << "130607 ";
+  segnum_file.close();
+
+  SegmentNumGenerator sng("testfile");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: error reading saved segment number from file");
+}
+
+
+/* Check that a stored segnum with leading whitespace throws an error
+ */
+TESTFUNC(SegmentNumGenerator_segnumgen_file_leading_whitespace){
+  std::ofstream segnum_file("testfile",std::ios::trunc);
+  if(!segnum_file){
+    TESTERROR("could not open \"testfile\"");
+  }
+  segnum_file << " 130607" << std::endl;
+  segnum_file << " 130607";
+  segnum_file.close();
+
+  SegmentNumGenerator sng("testfile");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: error reading saved segment number from file");
+}
+
+
+/* Check that a stored segnum file with extra non-empty lines throws an error
+ */
+TESTFUNC(SegmentNumGenerator_segnumgen_file_extra_lines){
+  std::ofstream segnum_file("testfile",std::ios::trunc);
+  if(!segnum_file){
+    TESTERROR("could not open \"testfile\"");
+  }
+  segnum_file << "130607" << std::endl;
+  segnum_file << "130607" << std::endl;
+  segnum_file << " " << std::endl;
+  segnum_file.close();
+
+  SegmentNumGenerator sng("testfile");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: error reading saved segment number from file");
+}
+
+
+/* Check that a stored segnum file with non-matching lines throws an error
+ */
+TESTFUNC(SegmentNumGenerator_segnumgen_file_non_matching_lines){
+  std::ofstream segnum_file("testfile",std::ios::trunc);
+  if(!segnum_file){
+    TESTERROR("could not open \"testfile\"");
+  }
+  segnum_file << "11023" << std::endl;
+  segnum_file << "11213";
+  segnum_file.close();
+
+  SegmentNumGenerator sng("testfile");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: error reading saved segment number from file");
 }
 
 
@@ -106,11 +188,12 @@ TESTFUNC(SegmentNumGenerator_segnumgen_file_value_too_high){
   if(!segnum_file){
     TESTERROR("could not open \"testfile\"");
   }
+  segnum_file << "281474976710655" << std::endl;
   segnum_file << "281474976710655";
   segnum_file.close();
 
   SegmentNumGenerator sng("testfile");
-  TESTTHROW(sng.next_num(),"SegmentNumGenerator: stored segment number in file");
+  TESTTHROW(sng.next_num(),"SegmentNumGenerator: error reading saved segment number from file");
 }
 
 
@@ -121,7 +204,8 @@ TESTFUNC(SegmentNumGenerator_set_reserved_with_zero){
   if(!segnum_file){
     TESTERROR("could not open \"testfile\"");
   }
-  segnum_file << std::to_string(0);;
+  segnum_file << std::to_string(1) << std::endl;
+  segnum_file << std::to_string(1);
   segnum_file.close();
 
   TESTTHROW(SegmentNumGenerator sng("testfile",0),"SegmentNumGenerator: set_reserved called with 0");

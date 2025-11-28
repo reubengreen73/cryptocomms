@@ -140,23 +140,36 @@ both hosts) and <fifo-path> is a file system path indicating where to find or cr
 FIFOs for this channel.
 
 The "self" stanza may include a line to set the "segment_number_file" option. This sets
-the location for the file where cryptocomms keeps a record of an internal "segment number
-counter" which is needed for cryptographic security. If this value is not set a default
-file name in the directory where cryptocomms is run will be used.  [NOTE: need more on how
-to handle this properly]
+the location and base name for the files where cryptocomms keeps a record of an internal
+"segment number counter" which is needed for cryptographic security. If this value is not
+set, default file names in the directory where cryptocomms is run will be used.  [NOTE:
+need more on how to handle this properly]
 
 
 #######################
 # Running Cryptocomms #
 #######################
 
-To run Cryptocomms, prepare a configuration file as described above, and then run the
-cryptocomms binary with the path to the file as the only argument. Cryptocomms will create
-the FIFOs for all channels if they do not exist, and will also create a "segment number
-counter" file in either the current directory, or another location specified in the
-configuration file (see above for more on this file). Cryptocomms will then go into its
-main mode of operation, where it listens for data on a FIFO or from the network, and moves
-that data as appropriate.
+To run Cryptocomms, you need to prepare a configuration file as described above. You also
+need to create files to hold the stored record of the "segment number counter", and put a
+valid segment number in them. The format of the configuration file is explained above, so
+we shall now explain the format of the segment number files.
+
+The path and base name of the segment number files are given by the "segment_number_file"
+option in the configuration file. If this option is not set, the path defaults to the
+current directory where Cryptocomms is running, and the base name defaults to
+"segnumfile".  The actual names of the two files are created by suffixing "_FIRST" and
+"_SECOND" to the base name. Before running Cryptocomms for the first time, you should
+create these files. Their contents should be identical, consisting of two lines, each with
+the single character "1" on it. After Cryptocomms has been run once, you should not modify
+these files. If you need to move the files, ensure that you do not modify them and that
+the configuration file is set up to point to the files' new path and base name (you must
+preserve the "_FIRST" and "_SECOND" suffixes on the filenames).
+
+To run Cryptocomms, run the cryptocomms binary with the path to the file as the only
+argument. Cryptocomms will create the FIFOs for all channels if they do not exist.
+Cryptocomms will then go into its main mode of operation, where it listens for data on a
+FIFO or from the network, and moves that data as appropriate.
 
 Other applications can use Cryptocomms to communicate as follows. Suppose that two hosts,
 A and B, both have Cryptocomms running, and are configured to communicate via a

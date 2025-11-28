@@ -8,6 +8,34 @@
 
 #include "EpochTime.h"
 
+/*  SEGMENT NUMBER FILES
+ *  Cryptocomms keeps a record of which segment numbers have been used on non-volatile
+ *  storage. This record helps ensure that segment numbers will never be reused, which
+ *  is vital for cryptographic security. The record consists of two files, which are
+ *  located at path_first_ and path_second_. These files will normally be identical.
+ *
+ *  The format of a segment number file is as follows. The first two lines must be
+ *  identical, and contain only the characters 0123456789. Any subsequent lines must be
+ *  empty (not even whitespace is allowed). The number on the first two lines is the
+ *  stored segment number. The strict formatting required of these files, together with
+ *  the repetition of the stored number, means that any accidental corruption will be
+ *  detected with high probability.
+ *
+ *  Whenever the record of segment numbers is read from non-volatile storage (this
+ *  happens, in particular, at application start-up), at least one of these files must
+ *  be present, correctly formatted, and contain a valid segment number. If not, an
+ *  error is thrown and the application aborts. After reading the segment numbers, the
+ *  application will select some range of segment numbers to reserve for use, and will
+ *  write the highest segment number reserved back to non-volatile storage, writing one
+ *  of the files completely before writing the other, to ensure at least one file
+ *  always contains a valid record. This allows recovery from unexpected shutdowns
+ *  during these file writes (which might leave a file corrupted).
+ *
+ *  Note that at least one segment number storage file must be initialized with a
+ *  positive segment number before Cryptocomms runs for the first time. 1 is a good
+ *  choice for the segment number to use.
+ */
+
 namespace
 {
 
@@ -16,20 +44,11 @@ namespace
    */
   constexpr SegmentNumGenerator::segnum_t segnum_max = 281474976710655U;
 
-  /* get_saved_segnum() loads the stored segment number from the file. A return
+
+  /* get_saved_segnum() loads the stored segment number from a file. A return
    * value of 0 indicates an error (note that 0 is not a valid segment number).
-   *
-   * The application never creates this file, and for the application to run it must
-   * already exist and contain a valid stored segment number. Allowing the application
-   * to auto-create this file would weaken the effectiveness of recording which segment
-   * numbers have been used.
-   *
-   * The format of the segment number file is as follows. The first two lines must be
-   * identical, and contain only the characters 0123456789. Any subsequent lines must
-   * be empty (not even whitespace is allowed). The number on the first two lines is the
-   * stored segment number. The strict formatting required of this file, together with
-   * the repetition of the stored number, means that any accidental corruption will be
-   * detected with high probability.
+   * See the comment at the top of the file for information on the format of the
+   * segment number file.
    */
   SegmentNumGenerator::segnum_t get_saved_segnum(const std::string& path)
   {
@@ -56,8 +75,9 @@ namespace
     }
 
     /* check that the first line contains only digits */
-    auto check_func = [&](char c){return (std::string("0123456789").find(c) !=
-                                          std::string::npos);};
+    auto check_func = [&](char c){
+      return (std::string("0123456789").find(c) != std::string::npos);
+    };
     if(not std::all_of(file_line_1.begin(),file_line_1.end(),check_func) ){
       return 0;
     }
@@ -76,9 +96,13 @@ namespace
      * value from the file is strictly less than segnum_max, since the maximum number which a
      * previous run of the application could have stored is (segnum_max -1), and the initial
      * value set at installation should be vastly smaller than this.
+     *
+     * If the segment number is too big here, we throw an error rather than return 0, as
+     * returning 0 would allow a smaller number from the other file to be used, which might
+     * cover up some serious problem.
      */
     if(not (saved_segnum < segnum_max) ){
-      return 0;
+      throw std::runtime_error("SegmentNumGenerator: segment number too large in file "+path);
     }
 
     return saved_segnum;
@@ -104,11 +128,11 @@ namespace
   }
 
 
-  /* save_segnum() stores a segment number to back to the file. The number stored represents
-   * the highest segment number which could already have been handed out by next_num().
-   * save_segment() makes some effort to ensure that the file has been written to permanent
-   * storage before returning. The argument segnum must not be 0, as 0 is not a valid
-   * segment number.
+  /* save_segnum() stores a segment number to the file at the given path. The number stored
+   * represents the highest segment number which could already have been handed out by
+   * next_num(). save_segnum() makes some effort to ensure that the file has been written to
+   * permanent storage before returning. The argument segnum must not be 0, as 0 is not a
+   * valid segment number.
    */
   void save_segnum(SegmentNumGenerator::segnum_t segnum, const std::string& path)
   {
@@ -122,11 +146,11 @@ namespace
     while(true){
       std::ofstream segnum_file(path,std::ios::trunc);
       if(!segnum_file){
-        throw std::runtime_error(std::string("SegmentNumGenerator: could not open stored segment number file: ")
+        throw std::runtime_error("SegmentNumGenerator: could not open stored segment number file: "
                                  +path);
       }
 
-      /* see the comment before get_saved_segnum() for the format of the segment number file */
+      /* see the comment at the top of the file for the format of the segment number file */
       segnum_file << segnum_string << std::endl;
       segnum_file << segnum_string;
       segnum_file.close();
@@ -154,12 +178,13 @@ namespace
 }
 
 
-/* "path" is the path to the file which records used segment numbers,
+/* "path" is the path to the files which record used segment numbers,
  * "reserved" is how many segment numbers to reserve for use each time
  * a fresh reservation of numbers happens
  */
 SegmentNumGenerator::SegmentNumGenerator(std::string path, unsigned int reserved):
-  path_(path)
+  path_first_(path+"_FIRST"),
+  path_second_(path+"_SECOND")
 {
   set_reserved(reserved);
 
@@ -220,10 +245,14 @@ const std::lock_guard<std::mutex> guard_for_lock(lock_);
  */
 void SegmentNumGenerator::reserve_nums()
 {
-  segnum_t saved_segnum = get_saved_segnum(path_);
+  /* Read from both of the segment number files, and take the higher. If reading both
+     files returns an error, there is no usable record of segment numbers and we must
+     abort. get_saved_segnum() returns 0 if the given file is missing or corrupt. */
+  segnum_t saved_segnum_first = get_saved_segnum(path_first_);
+  segnum_t saved_segnum_second = get_saved_segnum(path_second_);
+  segnum_t saved_segnum = std::max(saved_segnum_first,saved_segnum_second);
   if(saved_segnum == 0){
-    throw std::runtime_error(std::string("SegmentNumGenerator: error reading saved") +\
-                             std::string(" segment number from file ") +  path_ );
+    throw std::runtime_error("SegmentNumGenerator: error reading saved segment number");
   }
 
   /* Generate a segment number from the system clock. We want to ensure that
@@ -251,5 +280,12 @@ void SegmentNumGenerator::reserve_nums()
   }
   new_reserve_needed_ = next_new_reserve_needed;
 
-  save_segnum(new_reserve_needed_-1,path_);
+  /* Write the segment number to the first file, and then write it to the second file.
+     save_segnum() ensures that the write has been completed successfully before returning,
+     so this two-step process ensures that there is always one file which holds a segment
+     number at least as great as any which has been returned from next_num(). This allows
+     recovery from an unexpected shutdown during either of the calls to save_segnum() which
+     leaves the file in a corrupt state. */
+  save_segnum(new_reserve_needed_-1,path_first_);
+  save_segnum(new_reserve_needed_-1,path_second_);
 }

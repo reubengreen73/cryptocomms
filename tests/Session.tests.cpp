@@ -50,12 +50,14 @@ SessionAndFDs make_session(const host_id_type& self_id,
                            const std::string& segnum_file_path,
                            unsigned int num_connection_workers)
 {
-  /* create the segment number file */
-  std::string segnum_string("1");
-  std::ofstream segnum_file(segnum_file_path,std::ios::out);
-  segnum_file << segnum_string << std::endl;
-  segnum_file << segnum_string;
-  segnum_file.close();
+  /* create the segment number files */
+  std::string segnum_string("1\n1");
+  std::ofstream segnum_file_first(segnum_file_path+"_FIRST",std::ios::out);
+  segnum_file_first << segnum_string;
+  segnum_file_first.close();
+  std::ofstream segnum_file_second(segnum_file_path+"_SECOND",std::ios::out);
+  segnum_file_second << segnum_string;
+  segnum_file_second.close();
 
   SessionAndFDs session_and_fds;
   session_and_fds.sess = std::make_unique<Session>(self_id, self_ip_addr, self_port,

@@ -160,13 +160,15 @@ namespace
     }
     conn_etc.socket_fd_bound_port = ntohs(bind_addr.sin_port);
 
-    /* 2 - create the segment number file */
-    std::string segnumfile_name("segnumfile");
-    std::string segnum_string("1");
-    std::ofstream segnum_file(segnumfile_name,std::ios::out);
-    segnum_file << segnum_string << std::endl;
-    segnum_file << segnum_string;
-    segnum_file.close();
+    /* 2 - create the segment number files */
+    std::string segnumfile_base_name("segnumfile");
+    std::string segnum_string("1\n1");
+    std::ofstream segnum_file_first(segnumfile_base_name+"_FIRST",std::ios::out);
+    segnum_file_first << segnum_string;
+    segnum_file_first.close();
+    std::ofstream segnum_file_second(segnumfile_base_name+"_SECOND",std::ios::out);
+    segnum_file_second << segnum_string;
+    segnum_file_second.close();
 
     /* 3 - make the Connection */
 
@@ -182,7 +184,7 @@ namespace
     std::shared_ptr<UDPSocket> udp_socket =
       std::make_shared<UDPSocket>("127.0.0.1",0);
     std::shared_ptr<SegmentNumGenerator> segnumgen =
-      std::make_shared<SegmentNumGenerator>(segnumfile_name,1);
+      std::make_shared<SegmentNumGenerator>(segnumfile_base_name,1);
 
     conn_etc.conn = std::make_shared<Connection>(conn_etc.conn_id,
                                                  peer_name,

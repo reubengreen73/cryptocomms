@@ -34,7 +34,8 @@ public:
   SegmentNumGenerator& operator=(const SegmentNumGenerator& other) = delete;
 
 private:
-  std::string path_;
+  std::string path_first_;
+  std::string path_second_;
   std::mutex lock_;
   unsigned int reserved_;
   segnum_t next_num_;

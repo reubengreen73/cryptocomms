@@ -111,7 +111,6 @@ Session::Session(const host_id_type& self_id,
   self_id_(self_id),
   default_max_packet_size_(default_max_packet_size),
   udp_socket_(std::make_shared<UDPSocket>(self_ip_addr,self_port)),
-  segnumgen_(std::make_shared<SegmentNumGenerator>(segnum_file_path,2*peer_configs.size())),
   connection_dwell_loops_(dwell_max),
   stopping_(false),
   active_(true)
@@ -125,6 +124,16 @@ Session::Session(const host_id_type& self_id,
   pipes = make_internal_pipe();
   udp_thread_stop_read_fd_ = pipes.read_fd;
   udp_thread_stop_write_fd_ = pipes.write_fd;
+
+  /* Initialize the SegmentNumGenerator, telling it to reserve as many numbers as
+     there will be Connections. This provides each Connection with one segment number
+     to use, which will allow it to send over 280 trillion messages before any more
+     segment numbers are needed */
+  unsigned int num_connections = 0;
+  for(auto const& peer_config : peer_configs){
+    num_connections += peer_config.channels.size();
+  }
+  segnumgen_ = std::make_shared<SegmentNumGenerator>(segnum_file_path,num_connections);
 
   /* create the Connections */
   for(auto const& peer_config : peer_configs){ // for each remote peer...
